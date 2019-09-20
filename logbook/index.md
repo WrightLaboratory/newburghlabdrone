@@ -1,7 +1,7 @@
 ## Newburgh Group Drone Calibration Postings
 
 This index will host links to shared posts and write ups that detail test results and figures we wish to discuss.
-Write ups should go in the "[newburghlab-drone/logbook/postings/](newburghlab-drone/logbook/postings/)" folder and adhere to the yyyymmdd_name convention.
+Write ups should go in the "[newburghlab-drone/logbook/postings/](postings/)" folder and adhere to the yyyymmdd_name convention.
 
 Example Link Format:
 ```
