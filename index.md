@@ -1,11 +1,11 @@
 ## Newburgh Group Drone Calibration Postings
 
 This index will host links to shared posts and write ups that detail test results and figures we wish to discuss.
-Write ups should go in the "[logbook/postings/](postings/)" folder and adhere to the yyyymmdd_name convention.
+Write ups should go in the "[newburghlab-drone/logbook/postings/](newburghlab-drone/logbook/postings/)" folder and adhere to the yyyymmdd_name convention.
 
 Example Link Format:
 ```
-* [190711 - Mapping a Small Antenna](postings/20190318_ExcessNoise/index.md) - July 11, 2019 (WT)
+* [20190711 - Mapping a Small Antenna](postings/20190318_ExcessNoise/index.md) - July 11, 2019 (WT)
 ```
 
 Example Filepath and Directory Structure:
@@ -22,4 +22,4 @@ Example Filepath and Directory Structure:
         ->samplecode.py
 ```
 
-* [190711 - Mapping a Small Antenna](postings/20190318_ExcessNoise/index.md) - July 11, 2019 (WT)
+* [20190711 - Mapping a Small Antenna](postings/20190318_ExcessNoise/index.md) - July 11, 2019 (WT)
