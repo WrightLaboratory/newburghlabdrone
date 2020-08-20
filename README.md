@@ -1,3 +1,5 @@
+As of 8/20/20
+
 Directory contains the relevant scripts, modules, and notebooks to produce the BMX analysis plots I've made up to this point.
 
 I put flights in dictionaries of the following structure:
