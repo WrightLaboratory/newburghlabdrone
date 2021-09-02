@@ -25,7 +25,7 @@ class Corr_Data:
         self.Gain_Directory=Gain_Directory
         os.chdir(self.Data_Directory)
         self.filenames=np.sort(glob.glob('*[!.lock]'))[0:-1]
-        os.chdir('/Users/wct9/python')
+#         os.chdir('/Users/wct9/python')
         ## Load first data file to get array dimensions for V,t,f,prod:
         fd=h5py.File(self.Data_Directory+self.filenames[0], 'r')
         #vis=fd['vis'][:] # Visibility matrix
@@ -51,7 +51,7 @@ class Corr_Data:
         if Load_Gains==True:
             os.chdir(Gain_Directory)
             self.gainfile=str(glob.glob('*')[0])
-            os.chdir('/Users/wct9/python')
+#             os.chdir('/Users/wct9/python')
             fg=h5py.File(self.Gain_Directory+self.gainfile)
             self.gain_coeffs=fg['gain_coeff'][0] 
             self.gain_exp=fg['gain_exp'][0]

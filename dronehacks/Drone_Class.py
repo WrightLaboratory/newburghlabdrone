@@ -72,16 +72,16 @@ from mpl_toolkits import mplot3d
 import pandas
 
 ## Define directories that contain modules/files of interest:
-working_directory=u"/Users/wct9/python/"
-bmxdata_directory=u'/Users/wct9/python/bmxdaq/py/'
-drone_mod_directory=u'/Users/wct9/python/dronehacks/'
-BMX_directory=u'/Users/wct9/python/yale_bmx/BMX_Data/'
-drone_directory=u'/Users/wct9/python/yale_bmx/Drone_Data/'
+# working_directory=u"/Users/wct9/python/"
+# bmxdata_directory=u'/Users/wct9/python/bmxdaq/py/'
+# drone_mod_directory=u'/Users/wct9/python/dronehacks/'
+# BMX_directory=u'/Users/wct9/python/yale_bmx/BMX_Data/'
+# drone_directory=u'/Users/wct9/python/yale_bmx/Drone_Data/'
 
-## Import bmxdata package to use BMXFile: BMXFile(*_yale_D1.data)
-os.chdir(bmxdata_directory)
-from bmxdata import BMXFile
-os.chdir(working_directory)
+# ## Import bmxdata package to use BMXFile: BMXFile(*_yale_D1.data)
+# os.chdir(bmxdata_directory)
+# from bmxdata import BMXFile
+# os.chdir(working_directory)
 
 ## Specify relevant coordinates in llh:
 VECT_Drone_Start_LOC=pygeodesy.ellipsoidalNvector.LatLon(40.87031876496191, -72.86561763277804, 23.964228339399998).to3llh()
