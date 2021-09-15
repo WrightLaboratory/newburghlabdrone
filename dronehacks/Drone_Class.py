@@ -71,18 +71,6 @@ import pygeodesy
 from mpl_toolkits import mplot3d
 import pandas
 
-## Define directories that contain modules/files of interest:
-# working_directory=u"/Users/wct9/python/"
-# bmxdata_directory=u'/Users/wct9/python/bmxdaq/py/'
-# drone_mod_directory=u'/Users/wct9/python/dronehacks/'
-# BMX_directory=u'/Users/wct9/python/yale_bmx/BMX_Data/'
-# drone_directory=u'/Users/wct9/python/yale_bmx/Drone_Data/'
-
-# ## Import bmxdata package to use BMXFile: BMXFile(*_yale_D1.data)
-# os.chdir(bmxdata_directory)
-# from bmxdata import BMXFile
-# os.chdir(working_directory)
-
 ## Specify relevant coordinates in llh:
 VECT_Drone_Start_LOC=pygeodesy.ellipsoidalNvector.LatLon(40.87031876496191, -72.86561763277804, 23.964228339399998).to3llh()
 VECT_BMX_E_LOC=pygeodesy.ellipsoidalNvector.LatLon(40.86995317295864, -72.86603925418495, 19.464228339399998).to3llh()
@@ -150,7 +138,7 @@ class Drone_Data:
         self.dish_pointings_LC=dpointings
         self.dish_pols_LC=dpols
         ## Read Drone RTK Data
-        drone_data=pandas.read_csv(dronedir+FLYTAG,skiprows=np.arange(1,500).tolist())
+        drone_data=pandas.read_csv(dronedir+FLYTAG,skiprows=np.arange(1,500).tolist(),low_memory=False)
         ## Assign Drone RTK Data to class variables:
         if "_processed" in FLYTAG:
             print("Initializing drone data via processed_csv routine: {}".format(FLYTAG))
@@ -181,7 +169,7 @@ class Drone_Data:
             self.hmsl=np.array(drone_data["RTKdata:Hmsl_P"])
             self.t_arr_timestamp=np.array(drone_data["GPS:dateTimeStamp"])
             self.t_index=np.arange(len(self.t_arr_timestamp))
-            self.t_arr_datetime=np.array(interp_time(drone_data)["UTC"])
+            self.t_arr_datetime=np.array(interp_time(drone_data)["UTC"],dtype='object')
             self.altitude=np.array(drone_data["RTKdata:Hmsl_P"])[:]-Origin_llh[2]
         ## Define coordinate systems we will eventually want to use:
         print("generating llh, geocentric cartesian, local cartesian, and local spherical coordinates.")

@@ -19,13 +19,18 @@ import datetime
 import pytz
 
 class Corr_Data:
-    def __init__(self,n_channels,chmap,Data_Directory="",Data_File_Index=None,Load_Gains=True,Gain_Directory="",Fix_Gains=False,Gain_Params=[1.0,24.0],flb=0,fub=-1):
+    def __init__(self,n_channels,chmap,Data_Directory="",Working_Directory="",Data_File_Index=None,Load_Gains=True,Gain_Directory="",Fix_Gains=False,Gain_Params=[1.0,24.0],flb=0,fub=-1):
         ## Get data files
         self.Data_Directory=Data_Directory
         self.Gain_Directory=Gain_Directory
+        self.Working_Directory=Working_Directory
         os.chdir(self.Data_Directory)
         self.filenames=np.sort(glob.glob('*[!.lock]'))[0:-1]
-        
+
+        os.chdir(Working_Directory)
+        print('Initializing Correlator Class using:')
+        print(" --> "+self.Data_Directory)
+
         ## Load first data file to get array dimensions for V,t,f,prod:
         fd=h5py.File(self.Data_Directory+self.filenames[0], 'r')
         #vis=fd['vis'][:] # Visibility matrix
@@ -43,11 +48,7 @@ class Corr_Data:
             self.freq=np.array([i[0] for i in fd['index_map']['freq'][flb:fub]]) # frequency axis
             self.prod=fd['index_map']['prod'][:] # product axis
             self.n_channels=int(n_channels)
-
         
-        
-#         ## Let's select only the auto-correlation channels from the full data:
-        self.n_channels=int(n_channels)
         self.chmap=np.array(chmap[:self.n_channels]).astype(int)
         self.automap=np.zeros(self.n_channels).astype(int)
         prodmat=np.array([element for tupl in self.prod for element in tupl]).reshape(len(self.prod),2)
@@ -63,7 +64,7 @@ class Corr_Data:
         if Load_Gains==True:
             os.chdir(Gain_Directory)
             self.gainfile=str(glob.glob('*')[0])
-#             os.chdir('/Users/wct9/python')
+            os.chdir(Working_Directory)
             fg=h5py.File(self.Gain_Directory+self.gainfile)
             self.gain_coeffs=fg['gain_coeff'][0] 
             self.gain_exp=fg['gain_exp'][0]
@@ -78,28 +79,29 @@ class Corr_Data:
         fg.close()
         
         ## Loop over all files to populate V_full,t_full
+        print(" --> Arrays initialized with shape {}".format(self.V_full.shape))
+        print("Assigning array values by reading in data files:")
         for i,file in enumerate(self.filenames[Data_File_Index]):
             try:
+                print("\r --> Loading File: {}/{}".format(self.filenames[i],self.filenames[-1]),end="")
                 fd_n=h5py.File(self.Data_Directory+self.filenames[i], 'r')
                 vis=fd_n['vis'][:,flb:fub,:] # Visibility matrix
-                
-                
-      ##distinguish bw processed and unprocessed files
+
+                ##distinguish bw processed and unprocessed files
                 if 'processed' in Data_Directory:
                     tm=fd_n['tm'][:] # time axis
                     freq=fd_n['freq'][flb:fub] # frequency axis
-                    prod=fd_n['prod'][:] # product axis 
-                    for ii in range(len(prod)):                
+                    prod=fd_n['prod'][:] # product axis
+                    for ii in range(len(prod)):
                         vis[:,:,ii]/=(self.gain[:,ii]*self.gain[:,ii])[np.newaxis,:]
-                
-                else: 
+                else:
                     tm=np.array([i[3] for i in fd_n['index_map']['time'][:]]) # time axis
                     freq=np.array([i[0] for i in fd_n['index_map']['freq'][flb:fub]]) # frequency axis
                     prod=fd_n['index_map']['prod'][:] # product axis
                     ## gain calibrate visibilities:
-                    for ii,pp in enumerate(prod):                
+                    for ii,pp in enumerate(prod):
                         vis[:,:,ii]/=(self.gain[:,pp[0]]*self.gain[:,pp[1]])[np.newaxis,:]
-                
+
                 for j,k in enumerate(self.automap):
                     self.V_full[i,:,:,j]=vis[:,:,k].real
                     self.sat_full[i,:,:,j]=fd_n['sat'][:,flb:fub,k].real
