@@ -35,11 +35,16 @@ class Corr_Data:
         if 'processed' in Data_Directory: 
             tm = fd['tm']
             self.freq = fd['freq'][flb:fub]
-            self.prod = fd['prod'][:]    
+            self.prod = fd['prod'][:]   
+            self.n_channels=len(self.prod)
+
         else: 
             tm=np.array([i[3] for i in fd['index_map']['time'][:]]) # time axis
             self.freq=np.array([i[0] for i in fd['index_map']['freq'][flb:fub]]) # frequency axis
             self.prod=fd['index_map']['prod'][:] # product axis
+            self.n_channels=int(n_channels)
+
+        
         
 #         ## Let's select only the auto-correlation channels from the full data:
         self.n_channels=int(n_channels)
