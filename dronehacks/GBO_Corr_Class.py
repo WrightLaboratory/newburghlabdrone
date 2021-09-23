@@ -26,24 +26,29 @@ class Corr_Data:
         self.Working_Directory=Working_Directory
         os.chdir(self.Data_Directory)
         self.filenames=np.sort(glob.glob('*[!.lock]'))[0:-1]
+
         os.chdir(Working_Directory)
         print('Initializing Correlator Class using:')
         print(" --> "+self.Data_Directory)
+
         ## Load first data file to get array dimensions for V,t,f,prod:
         fd=h5py.File(self.Data_Directory+self.filenames[0], 'r')
         #vis=fd['vis'][:] # Visibility matrix
         vis=fd['vis'][:,flb:fub,:]
-        ##distinguish bw processed and unprocessed files
-        if 'processed' in Data_Directory:
+        
+      ##distinguish bw processed and unprocessed files
+        if 'processed' in Data_Directory: 
             tm = fd['tm']
             self.freq = fd['freq'][flb:fub]
-            self.prod = fd['prod'][:]
+            self.prod = fd['prod'][:]   
             self.n_channels=len(self.prod)
-        else:
+
+        else: 
             tm=np.array([i[3] for i in fd['index_map']['time'][:]]) # time axis
             self.freq=np.array([i[0] for i in fd['index_map']['freq'][flb:fub]]) # frequency axis
             self.prod=fd['index_map']['prod'][:] # product axis
             self.n_channels=int(n_channels)
+        
         self.chmap=np.array(chmap[:self.n_channels]).astype(int)
         self.automap=np.zeros(self.n_channels).astype(int)
         prodmat=np.array([element for tupl in self.prod for element in tupl]).reshape(len(self.prod),2)
@@ -55,7 +60,7 @@ class Corr_Data:
         self.V_full=np.zeros((len(self.filenames[Data_File_Index]),vis.shape[0],vis.shape[1],self.n_channels))
         self.t_full=np.zeros((len(self.filenames[Data_File_Index]),vis.shape[0]))
         self.sat_full=np.zeros((len(self.filenames[Data_File_Index]),vis.shape[0],vis.shape[1],self.n_channels))
-        ## Get gain file (for all data files) if it exists...
+        # Get gain file (for all data files) if it exists...
         if Load_Gains==True:
             os.chdir(Gain_Directory)
             self.gainfile=str(glob.glob('*')[0])
@@ -72,6 +77,7 @@ class Corr_Data:
         self.gain=digital_gain.real[flb:fub,:]
         fd.close()
         fg.close()
+        
         ## Loop over all files to populate V_full,t_full
         print(" --> Arrays initialized with shape {}".format(self.V_full.shape))
         print("Assigning array values by reading in data files:")
@@ -80,6 +86,7 @@ class Corr_Data:
                 print("\r --> Loading File: {}/{}".format(self.filenames[i],self.filenames[-1]),end="")
                 fd_n=h5py.File(self.Data_Directory+self.filenames[i], 'r')
                 vis=fd_n['vis'][:,flb:fub,:] # Visibility matrix
+
                 ##distinguish bw processed and unprocessed files
                 if 'processed' in Data_Directory:
                     tm=fd_n['tm'][:] # time axis
@@ -94,6 +101,7 @@ class Corr_Data:
                     ## gain calibrate visibilities:
                     for ii,pp in enumerate(prod):
                         vis[:,:,ii]/=(self.gain[:,pp[0]]*self.gain[:,pp[1]])[np.newaxis,:]
+
                 for j,k in enumerate(self.automap):
                     self.V_full[i,:,:,j]=vis[:,:,k].real
                     self.sat_full[i,:,:,j]=fd_n['sat'][:,flb:fub,k].real
@@ -101,14 +109,14 @@ class Corr_Data:
                 fd.close()
                 fg.close()
             except OSError:
-                print('Skipping file: {}'.format(file))
+                print('Skipping file: {}'.format(file))    
+
         ## reshape these arrays
         self.V_full=self.V_full.reshape((len(self.filenames[Data_File_Index])*vis.shape[0],vis.shape[1],self.n_channels))
         self.t_full=self.t_full.reshape(len(self.filenames[Data_File_Index])*vis.shape[0])
         self.sat_full=self.sat_full.reshape((len(self.filenames[Data_File_Index])*vis.shape[0],vis.shape[1],self.n_channels))
         self.t_arr_datetime=np.array([datetime.datetime.fromtimestamp(tt,pytz.timezone('America/Montreal')).astimezone(pytz.utc) for tt in self.t_full])
         self.t_index=np.arange(len(self.t_arr_datetime))
-
     def Plot_Auto_Corr_Waterfalls(self):
         ## Express bounds for the plot axes
         wfbounds=[self.freq[-1],self.freq[0],self.t_full[-1]-self.t_full[0],0.0]
