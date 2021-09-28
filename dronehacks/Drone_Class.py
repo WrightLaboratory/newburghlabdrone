@@ -99,29 +99,35 @@ def xyz_to_rpt(xyz):
     return rpt
 
 ## Annie's function for fixing the time axis:
+# (9/28/2021) function for adding sub-second accuracy to DJI timestamps
+# now detects and eliminates >1s errors
 def interp_time(df_in):
     # find where the GPS turns on
     gps_idx = df_in[df_in.gpsUsed == True].index[0]
-    # find the first datetimestamp after that
-    first_dts = df_in["GPS:dateTimeStamp"][gps_idx]
-    # oops, maybe the GPS needs a minute to warm up
-    while(type(first_dts) == type(1.0) and gps_idx < len(df_in)-10):
-        print("inc")
-        gps_idx = gps_idx+1
+    # interpolate the time and see if it works out!
+    while (gps_idx < len(df_in)):
+        # look for where the datetimestamp ticks
         first_dts = df_in["GPS:dateTimeStamp"][gps_idx]
-    print("Interpolating time starting at "+str(first_dts))
-    # look for where the datetimestamp ticks
-    start_sec = int(first_dts[-3:-1])
-    while(int(df_in["GPS:dateTimeStamp"][gps_idx][-3:-1]) == start_sec):
-        gps_idx = gps_idx + 1
-    # use this reference timestamp to convert the offsetTime column into proper datetimes
-    start_dt = pandas.to_datetime(df_in["GPS:dateTimeStamp"][gps_idx])
-    offsets = np.array(df_in["offsetTime"]-df_in["offsetTime"][gps_idx])
-    offsets = pandas.to_timedelta(offsets, unit='s')
-    timestamps = start_dt + offsets
-    # put them in the dataframe
-    df_in = df_in.assign(timestamp = timestamps)
-    df_in = df_in.assign(UTC = timestamps)
+        start_sec = int(first_dts[-3:-1])
+        while(int(df_in["GPS:dateTimeStamp"][gps_idx][-3:-1]) == start_sec):
+            gps_idx = gps_idx + 1
+        # use this reference timestamp to convert the offsetTime column into proper datetimes
+        start_dt = pd.to_datetime(df_in["GPS:dateTimeStamp"][gps_idx])
+        offsets = np.array(df_in["offsetTime"]-df_in["offsetTime"][gps_idx])
+        offsets = pd.to_timedelta(offsets, unit='s')
+        timestamps = start_dt + offsets
+        # put them in the dataframe
+        df_in = df_in.assign(timestamp = timestamps)
+        df_in = df_in.assign(UTC = timestamps)
+        # check for excessive error by comparing the interpolated and uninterpolated timestamp columns
+        gps_dts = pd.to_datetime(df_in["GPS:dateTimeStamp"][gps_idx:-20]).values
+        interp_dts = pd.to_datetime(df_in["timestamp"][gps_idx:-20]).values
+        if (np.mean(np.abs(gps_dts - interp_dts)/np.timedelta64(1,'ms')) < 1000):
+            print("Timestamp interpolation succeeded")
+            break
+        else:
+            print("Detected >1s error, retrying")
+            gps_idx += 10 # increment the start timestamp index by an arbitrary amount and retry
     return df_in
 
 ## Make the colors cute and shit:
