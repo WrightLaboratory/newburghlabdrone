@@ -19,36 +19,31 @@ import datetime
 import pytz
 
 class Corr_Data:
-    def __init__(self,n_channels,chmap,Data_Directory="",Working_Directory="",Data_File_Index=None,Load_Gains=True,Gain_Directory="",Fix_Gains=False,Gain_Params=[1.0,24.0],flb=0,fub=-1):
+    def __init__(self,n_channels,chmap,Data_Directory="",Working_Directory="",Data_File_Index=None,Load_Gains=True,Gain_Directory="",Fix_Gains=False,Gain_Params=[1.0,24.0],flb=0,fub=-1,Apply_Gains=True):
         ## Get data files
         self.Data_Directory=Data_Directory
         self.Gain_Directory=Gain_Directory
         self.Working_Directory=Working_Directory
         os.chdir(self.Data_Directory)
         self.filenames=np.sort(glob.glob('*[!.lock]'))[0:-1]
-
         os.chdir(Working_Directory)
         print('Initializing Correlator Class using:')
         print(" --> "+self.Data_Directory)
-
         ## Load first data file to get array dimensions for V,t,f,prod:
         fd=h5py.File(self.Data_Directory+self.filenames[0], 'r')
         #vis=fd['vis'][:] # Visibility matrix
         vis=fd['vis'][:,flb:fub,:]
-        
-      ##distinguish bw processed and unprocessed files
+        ##distinguish bw processed and unprocessed files
         if 'processed' in Data_Directory: 
             tm = fd['tm']
             self.freq = fd['freq'][flb:fub]
             self.prod = fd['prod'][:]   
             self.n_channels=len(self.prod)
-
         else: 
             tm=np.array([i[3] for i in fd['index_map']['time'][:]]) # time axis
             self.freq=np.array([i[0] for i in fd['index_map']['freq'][flb:fub]]) # frequency axis
             self.prod=fd['index_map']['prod'][:] # product axis
             self.n_channels=int(n_channels)
-        
         self.chmap=np.array(chmap[:self.n_channels]).astype(int)
         self.automap=np.zeros(self.n_channels).astype(int)
         prodmat=np.array([element for tupl in self.prod for element in tupl]).reshape(len(self.prod),2)
@@ -65,19 +60,25 @@ class Corr_Data:
             os.chdir(Gain_Directory)
             self.gainfile=str(glob.glob('*')[0])
             os.chdir(Working_Directory)
-            fg=h5py.File(self.Gain_Directory+self.gainfile)
-            self.gain_coeffs=fg['gain_coeff'][0] 
-            self.gain_exp=fg['gain_exp'][0]
-            digital_gain=fg['gain_coeff'][0] 
-            digital_gain*=np.power(2,fg['gain_exp'][0])[np.newaxis,:]
+            try:
+                fg=h5py.File(self.Gain_Directory+self.gainfile)
+                self.gain_coeffs=fg['gain_coeff'][0] 
+                self.gain_exp=fg['gain_exp'][0]
+                digital_gain=fg['gain_coeff'][0] 
+                digital_gain*=np.power(2,fg['gain_exp'][0])[np.newaxis,:]
+            except OSError:
+                print(" --> ERROR: Gain file not found in specified directory!")
         elif Fix_Gains==True:
-            digital_gain=Gain_Params[0]*np.array((2**Gain_Params[1])*np.ones((1024,20))).astype(complex)
+            digital_gain=Gain_Params[0]*np.array((2**Gain_Params[1])*np.ones((len(self.freq),self.n_channels))).astype(complex)
             self.gain_coeffs=Gain_Params[0]*np.ones(len(self.freq))
             self.gain_exp=Gain_Params[1]*np.ones(vis.shape[2])
+        elif Apply_Gains==False:
+            digital_gain=np.ones((len(self.freq),self.n_channels))
+            self.gain_coeffs=np.ones(len(self.freq))
+            self.gain_exp=np.ones(vis.shape[2])
         self.gain=digital_gain.real[flb:fub,:]
         fd.close()
         fg.close()
-        
         ## Loop over all files to populate V_full,t_full
         print(" --> Arrays initialized with shape {}".format(self.V_full.shape))
         print("Assigning array values by reading in data files:")

@@ -112,16 +112,16 @@ def interp_time(df_in):
         while(int(df_in["GPS:dateTimeStamp"][gps_idx][-3:-1]) == start_sec):
             gps_idx = gps_idx + 1
         # use this reference timestamp to convert the offsetTime column into proper datetimes
-        start_dt = pd.to_datetime(df_in["GPS:dateTimeStamp"][gps_idx])
+        start_dt = pandas.to_datetime(df_in["GPS:dateTimeStamp"][gps_idx])
         offsets = np.array(df_in["offsetTime"]-df_in["offsetTime"][gps_idx])
-        offsets = pd.to_timedelta(offsets, unit='s')
+        offsets = pandas.to_timedelta(offsets, unit='s')
         timestamps = start_dt + offsets
         # put them in the dataframe
         df_in = df_in.assign(timestamp = timestamps)
         df_in = df_in.assign(UTC = timestamps)
         # check for excessive error by comparing the interpolated and uninterpolated timestamp columns
-        gps_dts = pd.to_datetime(df_in["GPS:dateTimeStamp"][gps_idx:-20]).values
-        interp_dts = pd.to_datetime(df_in["timestamp"][gps_idx:-20]).values
+        gps_dts = pandas.to_datetime(df_in["GPS:dateTimeStamp"][gps_idx:-20]).values
+        interp_dts = pandas.to_datetime(df_in["timestamp"][gps_idx:-20]).values
         if (np.mean(np.abs(gps_dts - interp_dts)/np.timedelta64(1,'ms')) < 1000):
             print("Timestamp interpolation succeeded")
             break
@@ -134,7 +134,7 @@ def interp_time(df_in):
 colorsarr=cm.gnuplot2(np.linspace(0,1,11))
 
 class Drone_Data:
-    def __init__(self,dronedir,FLYTAG,Origin_llh,Origin_key,dkeys,dcoords,dpointings,dpols):
+    def __init__(self,dronedir,FLYTAG,Origin_llh,Origin_key,dkeys,dcoords,dpointings,dpols,skip_rows=np.arange(1,500).tolist()):
         self.fn=FLYTAG
         self.Origin_llh=Origin_llh
         self.prime_origin=pygeodesy.EcefCartesian(latlonh0=Origin_llh[0],lon0=Origin_llh[1],height0=Origin_llh[2],name=Origin_key)
@@ -144,10 +144,11 @@ class Drone_Data:
         self.dish_pointings_LC=dpointings
         self.dish_pols_LC=dpols
         ## Read Drone RTK Data
-        drone_data=pandas.read_csv(dronedir+FLYTAG,skiprows=np.arange(1,500).tolist(),low_memory=False)
+        drone_data=pandas.read_csv(dronedir+FLYTAG,skiprows=skip_rows,low_memory=False)
         ## Assign Drone RTK Data to class variables:
         if "_processed" in FLYTAG:
             print("Initializing drone data via processed_csv routine: {}".format(FLYTAG))
+            print(" --> Skipping rows {} to {} to eliminate NAN values".format(skip_rows[0],skip_rows[-1]))
             self.latitude=np.array(drone_data.Lat)
             self.longitude=np.array(drone_data.Lon)
             self.pitch=np.array(drone_data.pitch)
@@ -166,6 +167,7 @@ class Drone_Data:
             #self.t_arr_datetime=np.array([np.datetime64(self.t_arr_timestamp[m]).astype(datetime.datetime).replace(tzinfo=pytz.UTC) for m in range(self.t_index.shape[0])])
         else:
             print("Initializing drone data via datcon_csv routine: {}".format(FLYTAG))
+            print(" --> Skipping rows {} to {} to eliminate NAN values".format(skip_rows[0],skip_rows[-1]))
             self.latitude=np.array(drone_data["RTKdata:Lat_P"])
             self.longitude=np.array(drone_data["RTKdata:Lon_P"])
             self.pitch=np.array(drone_data["IMU_ATTI(0):pitch"])
@@ -178,7 +180,7 @@ class Drone_Data:
             self.t_arr_datetime=np.array(interp_time(drone_data)["UTC"],dtype='object')
             self.altitude=np.array(drone_data["RTKdata:Hmsl_P"])[:]-Origin_llh[2]
         ## Define coordinate systems we will eventually want to use:
-        print("generating llh, geocentric cartesian, local cartesian, and local spherical coordinates.")
+        print(" --> generating llh, geocentric cartesian, local cartesian, and local spherical coordinates.")
         self.coords_llh=np.NAN*np.ones((self.t_index.shape[0],3))     ## Lat,Lon,hmsl from drone/RTK
         self.coords_xyz_GC=np.NAN*np.ones((self.t_index.shape[0],3))  ## x,y,z in meters in geocentric cartesian
         self.coords_xyz_LC=np.NAN*np.ones((self.t_index.shape[0],3))  ## x,y,z cartesian wrt a chosen origin (x=E,y=N,z=up)
@@ -189,7 +191,7 @@ class Drone_Data:
                 ## Create LatLon point for each recorded drone position:
                 p_t=pygeodesy.ellipsoidalNvector.LatLon(self.latitude[i],lon=self.longitude[i],height=self.hmsl[i])
             except RangeError:
-                print("poo")
+                print("     --> RangeError for index{}".format(i))
             ## Assign llh, xyz, xyz_prime, rpt_prime coordinates, pointwise:
             self.coords_llh[i]=p_t.to3llh()
             self.coords_xyz_GC[i]=p_t.to3xyz()
@@ -201,7 +203,7 @@ class Drone_Data:
             theta_prime=np.arccos(self.coords_xyz_LC[i,2]/r_prime)
             self.coords_rpt[i]=[r_prime,phi_prime,theta_prime]
                 
-        print("generating dish and receiver line of sight coordinates.")
+        print(" --> generating dish and receiver line of sight coordinates.")
         ## Calculate per-dish polar coordinates for drone/receiver in each other's beams as fxn of time:
         self.rpt_r_per_dish=np.zeros((len(self.dish_keystrings),len(self.t_index),3)) # drone posn wrt receiver
         self.rpt_t_per_dish=np.zeros((len(self.dish_keystrings),len(self.t_index),3)) # receiver posn wrt drone
