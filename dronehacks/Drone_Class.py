@@ -168,17 +168,23 @@ class Drone_Data:
         else:
             print("Initializing drone data via datcon_csv routine: {}".format(FLYTAG))
             print(" --> Skipping rows {} to {} to eliminate NAN values".format(skip_rows[0],skip_rows[-1]))
-            self.latitude=np.array(drone_data["RTKdata:Lat_P"])
-            self.longitude=np.array(drone_data["RTKdata:Lon_P"])
+            #self.latitude=np.array(drone_data["RTKdata:Lat_P"])
+            #self.longitude=np.array(drone_data["RTKdata:Lon_P"])
+            ## Inserts for when RTK is fucked up
+            self.latitude=np.array(drone_data["GPS(0):Lat"])
+            self.longitude=np.array(drone_data["GPS(0):Long"])
+            self.hmsl=np.array(drone_data["GPS(0):heightMSL"])
+            self.yaw=np.array(drone_data["IMU_ATTI(0):yaw360"])
+            ## return to normal
             self.pitch=np.array(drone_data["IMU_ATTI(0):pitch"])
             self.roll=np.array(drone_data["IMU_ATTI(0):roll"])
-            self.yaw=np.array(drone_data["RTKdata:YAW"])
+            #self.yaw=np.array(drone_data["RTKdata:YAW"])
             self.velocity=np.array(drone_data["IMU_ATTI(0):velComposite"])
-            self.hmsl=np.array(drone_data["RTKdata:Hmsl_P"])
+            #self.hmsl=np.array(drone_data["RTKdata:Hmsl_P"])
             self.t_arr_timestamp=np.array(drone_data["GPS:dateTimeStamp"])
             self.t_index=np.arange(len(self.t_arr_timestamp))
             self.t_arr_datetime=np.array(interp_time(drone_data)["UTC"],dtype='object')
-            self.altitude=np.array(drone_data["RTKdata:Hmsl_P"])[:]-Origin_llh[2]
+            self.altitude=self.hmsl-Origin_llh[2]
         ## Define coordinate systems we will eventually want to use:
         print(" --> generating llh, geocentric cartesian, local cartesian, and local spherical coordinates.")
         self.coords_llh=np.NAN*np.ones((self.t_index.shape[0],3))     ## Lat,Lon,hmsl from drone/RTK
