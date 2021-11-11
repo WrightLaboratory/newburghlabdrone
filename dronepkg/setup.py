@@ -1,22 +1,24 @@
-from distutils.core import setup
+from setuptools import setup
+from setuptools import find_packages
 
-__version__ = '1.0'
+with open("README.md", "r", encoding="utf-8") as fh:
+    long_description = fh.read()
 
-with open('requirements.txt') as f:
-    requirements = f.read().splitlines()
-
-setup_args = {
-    'name': 'dronepkg',
-    'author': 'Willy Tyndall',
-    'license': 'BSD',
-    'package_dir': {'dronepkg': 'dronepkg'},
-    'packages': ['dronepkg'],
-    'version': __version__,
-    'setup_requires': ['pytest-runner', 'numpy'],
-    'install_requires': requirements,
-    'tests_require': requirements,
-
-}
-
-if __name__ == '__main__':
-    setup(**setup_args)
+setuptools.setup(
+    name="dronepkg",
+    version="1.0",
+    author="Willy Tyndall",
+    author_email="will.tyndall@yale.edu",
+    description="A small example package",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    url="https://github.com/pypa/sampleproject",
+    classifiers=[
+        "Programming Language :: Python :: 3",
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: OS Independent",
+    ],
+    package_dir={"dronepkg": "dronepkg"},
+    packages=setuptools.find_packages(include=["dronepkg", 'dronepkg.*']),
+    python_requires=">=3.6",
+)

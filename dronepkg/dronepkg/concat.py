@@ -19,36 +19,41 @@ import pygeodesy
 from scipy.signal import square
 from scipy.stats import pearsonr
 
-def Interp_Switch(x,t_full,switch_full):
-    return np.interp(x,t_full,switch_full)
-
-def Pulsed_Data_Waveform(total_duration,period,duty_cycle_on):
-    ## Outputs should be an array of timedeltas and an array of switch voltages (1s and 0s)
-    ## Let's make the time resolution of these arrays milliseconds (10^-3 sec):
-    t_steps_ms=int(datetime.timedelta(seconds=total_duration).total_seconds()*1e3)+1 #n_steps
-    t_arr_s=np.linspace(0,total_duration,t_steps_ms)
-    ## Use the square function from scipy.signal to produce the 1s and 0s:
-    switch_signal_arr=0.5*square((2*np.pi/(period*1e-6))*t_arr_s,duty_cycle_on/period)+0.5
-    ## Create a timedelta array for interpolation purposes so we can interpolate the square wave later:
-    t_arr_datetime=np.array([datetime.timedelta(seconds=timeval) for timeval in t_arr_s])
-    return t_arr_s,t_arr_datetime,switch_signal_arr
+## Import packages from our own module:
+import dronepkg.plotting_utils as pu
+import dronepkg.fitting_utils as fu
+import dronepkg.geometry_utils as gu
+import dronepkg.time_utils as tu
 
 class CONCAT:
-    def __init__(self,CORRDATCLASS,DRONEDATCLASS,instrument_name="GBO-Hirax Array"):
+    def __init__(self,CORRDATCLASS,DRONEDATCLASS,):
         print('Initializing CONCAT CLASS using:')
         print(" --> "+CORRDATCLASS.Data_Directory)
-        print(" --> "+DRONEDATCLASS.fn)
-        ## Identify Filenames used in CONCAT Class:
-        self.Instrument_Name=instrument_name
-        self.fn_corr=CORRDATCLASS.filenames
-        self.fn_drone=DRONEDATCLASS.fn  
-        ## Time dimensions of all arrays must be concat with receiver data. Time index is therefore defined wrt telescope data.
-        self.t_index=CORRDATCLASS.t_index
-        self.t_arr_datetime=CORRDATCLASS.t_arr_datetime
-        self.f_arr=CORRDATCLASS.freq
-        self.V=CORRDATCLASS.V_full
+        print(" --> "+DRONEDATCLASS.FLYTAG)
+        ## Import file information from both corr and drone classes:
+        self.name=DRONEDATCLASS.name
+        self.Data_Directory=CORRDATCLASS.Data_Directory
+        self.Gain_Directory=CORRDATCLASS.Gain_Directory
+        self.filenames=CORRDATCLASS.filenames
+        self.gainfile=CORRDATCLASS.gainfile
+        self.Drone_Directory=DRONEDATCLASS.Drone_Directory
+        self.FLYTAG=DRONEDATCLASS.FLYTAG
+        ## Import vars from corr and drone classes:
+        self.n_dishes=CORRDATCLASS.n_dishes
         self.n_channels=CORRDATCLASS.n_channels
         self.chmap=CORRDATCLASS.chmap
+        self.origin=DRONEDATCLASS.origin
+        self.prime_origin=DRONEDATCLASS.prime_origin
+        self.dish_keystrings=DRONEDATCLASS.dish_keystrings
+        self.dish_coords=DRONEDATCLASS.dish_coords
+        self.dish_pointings=DRONEDATCLASS.dish_pointings
+        self.dish_polarizations=DRONEDATCLASS.dish_polarizations
+        ## Time dimensions of all arrays must be concat with receiver data. Time index is therefore defined wrt telescope data.
+        self.freq=CORRDATCLASS.freq
+        self.t=CORRDATCLASS.t
+        self.t_index=CORRDATCLASS.t_index
+        self.t_arr_datetime=CORRDATCLASS.t_arr_datetime
+        self.V=CORRDATCLASS.V
         ## Define lb and ub t_index corresponding to drone data start/stop times:
         drone_t_min=DRONEDATCLASS.t_arr_datetime[0]
         drone_t_max=DRONEDATCLASS.t_arr_datetime[-1]
@@ -85,7 +90,7 @@ class CONCAT:
         self.pulse_period=Period
         self.pulse_dutycycle=Dutycycle
         concat_duration=int(np.ceil((self.t_arr_datetime[-1]-self.t_arr_datetime[0]).total_seconds()))
-        time_s,time_dt,switch=Pulsed_Data_Waveform(total_duration=concat_duration,period=self.pulse_period,duty_cycle_on=self.pulse_dutycycle)
+        time_s,time_dt,switch=tu.Pulsed_Data_Waveform(total_duration=concat_duration,period=self.pulse_period,duty_cycle_on=self.pulse_dutycycle)
         ## Create t_offset range (1 period) and Pearson_r vars:
         t_offset_dist=np.linspace(-1.0*self.pulse_period*1e-6,0.0,1000)
         Pr_arr=np.zeros((self.n_channels,t_offset_dist.shape[0]))
@@ -102,7 +107,7 @@ class CONCAT:
             t_full=np.array([(m-self.t_arr_datetime[0]).total_seconds() for m in self.t_arr_datetime[:]])
             ## Loop over all time offsets in t_offset_dist to find maximum correlation between squarewave and data:
             for j,t_offset in enumerate(t_offset_dist):
-                shiftedswitch=Interp_Switch(t_full,time_s+t_offset,switch)
+                shiftedswitch=tu.Interp_Switch(t_full,time_s+t_offset,switch)
                 try:
                     Pr_arr[i,j]=pearsonr(normminsubdata.flatten(),shiftedswitch.flatten())[0]
                 except ValueError:
@@ -158,7 +163,7 @@ class CONCAT:
             ax.set_xlim(self.t_arr_datetime[cdtlb],self.t_arr_datetime[cdtub])
         tight_layout()
         
-    def Perform_Background_Subtraction(self):
+    def Perform_Background_Subtraction(self,window_size=5):
         ## BACKGROUND SUBTRACTED SPECTRA: ##
         self.V_bg=np.zeros(self.V.shape)
         self.V_bgsub=np.zeros(self.V.shape)
@@ -170,7 +175,7 @@ class CONCAT:
                 self.V_bg[k,:,:]=self.V[k,:,:]
             ## If ind is an on spectra, create an off spectra by averaging the before/after off spectra:
             elif k in np.union1d(self.inds_on,self.inds_span):
-                t_window=np.intersect1d(np.arange(k-5,k+5),self.inds_off)
+                t_window=np.intersect1d(np.arange(k-window_size,k+window_size),self.inds_off)
                 #print(k,t_window)
                 self.V_bg[k,:,:]=np.nanmean(self.V[t_window,:,:],axis=0)
         self.V_bgsub=self.V-self.V_bg
@@ -180,27 +185,27 @@ class CONCAT:
         for i in range(int(self.n_channels/2)):
             ## No pulse_args: all data
             if pulse_args==None:
-                t_cut=np.arange(t_bounds[0],t_bounds[1])
+                t_cut=np.arange(self.t_index[t_bounds[0]],self.t_index[t_bounds[1]])
                 pt_colors_1=np.nanmean(self.V[t_cut,f_bounds[0]:f_bounds[1],int(2*i)],axis=1)
                 pt_colors_2=np.nanmean(self.V[t_cut,f_bounds[0]:f_bounds[1],int(2*i)+1],axis=1)
             ## pulse_args="on" only source on
             elif pulse_args=="on":
-                t_cut=np.intersect1d(np.arange(t_bounds[0],t_bounds[1]),self.inds_on).tolist()
+                t_cut=np.intersect1d(np.arange(self.t_index[t_bounds[0]],self.t_index[t_bounds[1]]),self.inds_on).tolist()
                 pt_colors_1=np.nanmean(self.V[t_cut,f_bounds[0]:f_bounds[1],int(2*i)],axis=1)
                 pt_colors_2=np.nanmean(self.V[t_cut,f_bounds[0]:f_bounds[1],int(2*i)+1],axis=1)
             ## pulse_args="off" only source off
             elif pulse_args=="off":
-                t_cut=np.intersect1d(np.arange(t_bounds[0],t_bounds[1]),self.inds_off).tolist()
+                t_cut=np.intersect1d(np.arange(self.t_index[t_bounds[0]],self.t_index[t_bounds[1]]),self.inds_off).tolist()
                 pt_colors_1=np.nanmean(self.V[t_cut,f_bounds[0]:f_bounds[1],int(2*i)],axis=1)
                 pt_colors_2=np.nanmean(self.V[t_cut,f_bounds[0]:f_bounds[1],int(2*i)+1],axis=1)
             ## pulse_args="bg" only show background 
             elif pulse_args=="bg":
-                t_cut=np.arange(t_bounds[0],t_bounds[1]).tolist()
+                t_cut=np.arange(self.t_index[t_bounds[0]],self.t_index[t_bounds[1]]).tolist()
                 pt_colors_1=np.nanmean(self.V_bg[t_cut,f_bounds[0]:f_bounds[1],int(2*i)],axis=1)
                 pt_colors_2=np.nanmean(self.V_bg[t_cut,f_bounds[0]:f_bounds[1],int(2*i)+1],axis=1)
             ## pulse_args="bgsub" only show background subtracted on points
             elif pulse_args=="bgsub":
-                t_cut=np.intersect1d(np.arange(t_bounds[0],t_bounds[1]),self.inds_on).tolist()
+                t_cut=np.intersect1d(np.arange(self.t_index[t_bounds[0]],self.t_index[t_bounds[1]]),self.inds_on).tolist()
                 pt_colors_1=np.nanmean(self.V_bgsub[t_cut,f_bounds[0]:f_bounds[1],int(2*i)],axis=1)
                 pt_colors_2=np.nanmean(self.V_bgsub[t_cut,f_bounds[0]:f_bounds[1],int(2*i)+1],axis=1)
             ## Create axes and assign assign x,y points from drone using coords of choice:
@@ -229,7 +234,7 @@ class CONCAT:
                     im.set_clim(mincl,maxcl)
             for j,ax in enumerate([ax1,ax2]):
                 ax.set_facecolor('k')
-                ax.set_title(self.Instrument_Name+' Channel {} Beammap'.format(self.chmap[int(2*i)+j]))
+                ax.set_title(self.name+' Channel {} Beammap'.format(self.chmap[int(2*i)+j]))
                 if coord_args=="LC":
                     ax.set_xlabel('X Position $[m]$')
                     ax.set_ylabel('Y Position $[m]$')
