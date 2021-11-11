@@ -59,6 +59,3 @@ def Pulsed_Data_Waveform(total_duration,period,duty_cycle_on):
     ## Create a timedelta array for interpolation purposes so we can interpolate the square wave later:
     t_arr_datetime=np.array([datetime.timedelta(seconds=timeval) for timeval in t_arr_s])
     return t_arr_s,t_arr_datetime,switch_signal_arr
-
-def Interp_Switch(x,t_full,switch_full):
-    return np.interp(x,t_full,switch_full)

@@ -1,180 +1,118 @@
-As of 8/20/20
+# Python Package Name (TBD):
 
-Directory contains the relevant scripts, modules, and notebooks to produce the BMX analysis plots I've made up to this point.
-
-I put flights in dictionaries of the following structure:
-dictionary_name['flight name'].fulldict['autos'][dish_num,time_sample,freq_sample]
-at this point, you have a class that allows for: 
-- easy plotting of 1D cuts in dB, lin. ie dictionary_name['flight name'].plot_y_lin(dish_number,freq_indx, lb = -0.5, ub = 0.5, params=True)
-- plotting scatter plots. ie dictionary_name['flight name'].plotscatter(dish_number,freq_indx,)
-- printing 2D gaussian fit parameters; recalling array of fit parameters. 
-- accessing a full dictionary of flight/telescope data, where timestamps have been interpolated together. i.e. dictionary_name['flight name'].fulldict['autos'][dish_num,time_index,freq_index] for autocorrelation data
-
-
-Generally these take the arguments(dish_number, freq_sample) (or (polarization, dish_num, freq_sample) if a Wednesday flight) to start, with additional optional arguments for 1D plotting. This is all illustrated in the Processing_Basics notebook. 
-
-A few things to note:
-I hard coded in polarization for Thursday flights (which were done one polarization at a time), so we'll only be processing co-pol data
-Wed has both polarization options
-
-What exactly is in this directory?
-
-NOTEBOOKS:
-1. Processing_Basics.ipynb
-   - Intro to reading in data, plotting
-   - Catalog of flights
-   - Basic analysis of 2D fit parameters
-2. Extra_Plots.ipynb
-   - Onboard GPS comparison
-   - RFI investigation
-   - Diode removal
-   - Common point tagging (just motivates that we should calibrate data)
-3. BMX_Time_Offsets.ipynb
-   - Investigation of timing offsets for a series of frequencies, dishes
-
-SCRIPTS:
-1. get_flights.py 
-    - generated the flight dictionaries that are read into the notebooks (saved in .txt files)
-2. getallfits.py
-    - generated the 2D fits for each flight
-3. getallfits-concatFiles.py
-    - generated the 2D fits for combined data from same attenuation/polarization flight pairs
-
-MODULES:
-1. bmxdata.py
-    -Deals with processing telescope data, was written by BMX people
-2. BMX_Classes.py
-    - Reads in data, puts it in class, includes some extra functions
-3. TimeOffsetFns.py
-    - Dump of functions used to plot in BMX_Time_Offsets notebook
-
-
-Additionally, a number of txt files are referenced, which are on rubin (they store flight dictionaries for easy read in)
-1. thurs_raw.txt
-    - dictionary of thursday flights without timing correction applied
-2. thurs_offsets.txt
-    - dictionary of thursday flights with timing correction applied
-3. wed_raw.txt
-    - dictionary of Wed flights
-4. gaussianfits.txt
-    - dictionary of fit parameters for all dishes/frequencies from individual flights
-5. concat_flights.txt
-    -dictionary of flight pairs with common polarization/attenuation
-6. gaussianfits_concat.txt
-    - dictionary of fit parameters for all dishes/frequencies from paired flights
-7. FLYXXX_offsets.txt
-    - one for each flight, contain flight dictionaries for timing offsets from -1 to 1s in 0.1s intervals
-8. fits_by_dish.txt
-    - fit parameters for all flights/dishes at all frequencies
-    
-    
-![](https://github.com/dannyjacobs/ECHO/workflows/Run%20Tests/badge.svg)
-[![Documentation Status](https://readthedocs.org/projects/external-calibrator-for-hydrogen-arrays-echo/badge/?version=latest)](https://external-calibrator-for-hydrogen-arrays-echo.readthedocs.io/en/latest/?badge=latest)
-[![dannyjacobs](https://circleci.com/gh/dannyjacobs/ECHO.svg?style=shield)](https://circleci.com/gh/dannyjacobs/ECHO)
-[![codecov](https://codecov.io/gh/dannyjacobs/ECHO/branch/master/graph/badge.svg?token=X0UTMR10T2)](https://codecov.io/gh/dannyjacobs/ECHO)
-
-
-
-The External Calibrator for Hydrogen Arrays (ECHO) is a system for calibrating wide-field radio frequency arrays using a radio transmitter mounted on a drone.
-Primarily targeting (but not exclusively limited to) arrays operating in the sub-GHz band targeting highly redshifted
-21cm radiation from the early universe.
-
-This repository contains software for planning missions and analyzing data. It also contains hardware designs for drones and mounts.
-
-This is an open source project. Use and reuse is encouraged.  If you use this code or hardware designs please reference the github repo.
-http://github.com/dannyjacobs/ECHO and cite [our 2017 paper](http://adsabs.harvard.edu/abs/2017PASP..129c5002J).  If you have improvements please fork and send a PR!
-
-## Community
-* We have an active "Slack Connect" channel, accessible to anyone with a Slack account.  To be invited, email [Danny Jacobs](dcjacob2@asu.edu)
-* Project [Web page](http://danielcjacobs.com/ECHO)
-* [Code Documentation](https://external-calibrator-for-hydrogen-arrays-echo.readthedocs.io)
-* A [mailing list](https://groups.google.com/d/forum/astro_echo) exists
-
-## Installation
-Install prerequisites. We recommend the anaconda package manager
-* healpy (note that as of Jan 2020 healpy is not available for Windows)
-* matplotlib
-* numpy
-* scipy
-
-Get this repo
-`git clone https://github.com/dannyjacobs/ECHO.git`
-
-Install using pip
 ```
-cd ECHO
+Greetings and welcome to the software and analysis repository for Laura Newburgh's 21cm Drone Calibration group at Yale University. We are currently developing beam calibration techniques for 21cm instruments (like CHIME and HIRAX) using a drone-based transmitter. So far, we have mapped the beams of a single DSA-10 dish at the Owens Valley Radio Observatory (OVRO), the 4-dish BMX array at Brookhaven National Laboratory (BNL), a small testbed radio telescope at Yale's Leitner Family Observatory and Planetarium (LFOP), and an 8 element HIRAX analogue located at Green Bank Observatory (GBO).
+
+Contained within this git repo are python packages/modules for data processing, analysis notebooks, and a logbook that I hope will serve as a project wiki.
+
+Today (Nov. 11th, 2021) is the first large scale working release of the newly refactored code, and I'm excited to share the code I've written for this project. We plan to maintain this as an open source project. If you reuse code, please reference our repository on GitHub https://github.com/WrightLaboratory/newburghlabdrone/ and cite our work. To contact the authors, please will.tyndall at yale.edu
+
+- William Tyndall [WT] - (Graduate Student)
+```
+
+## Cloning and Installation:
+
+Prior to the initial release of this python package, we updated to the most recent available distributions of anaconda (v 4.10.1) and python (v 3.8.8). If possible, upgrading to this version is recommended for full functionality and minimal deprication errors. The only non-Anaconda package was pygeodesy at the time of release. All required packages are listed in the pip requirements file within the dronepkg directory.
+
+Begin by cloning this git repository (the stored sshkey method is recommended):
+```
+git clone git@github.com:WrightLaboratory/newburghlabdrone.git
+```
+
+Install dronepkg (and its dependencies) using pip:
+```
+cd newburghlabdrone/dronepkg/
 pip install .
 ```
 
+The dronepkg package should now be installed and added to the path for importation from any directory. Now you're ready to view and run the `tutorials` notebooks to get started.
 
-## Organization
-The code is organized into a few modules. The beam mapping pipeline steps are
-1. Read and down-select drone telemetry
-2. Read and down-select radio telescope data (varies per telescope, usually spectra vs time)
-3. Match up drone positions and telescope measurements. (Sometimes referred to as zippering.)
-4. Grid beam (including power map, sample counts and standard deviation)
-5. Analyze results. Example analysis steps include:
-  1. subtract transmitter model
-  2. plot beam maps
-  3. plot slices
-  4. plot drone events and dynamics
-  5. difference beams
-### Modules
 
- #### `plot_utils.py`
- Functions for plotting, but also all functions relating to healpix gridding
- and manipulation including gridding.
-  * `grid_to_healpix` :  grids aligned RF power vs XYZ position
- into a healpix map
-  * `make_beam` :  downselects desired spectral channel, converts from latlon to XYZ and calls `grid_to_healpix`
-  * `project_healpix` :  flattens from spherical healpix map to 2d gnomic projection
-  * `rotate_hpm` :  rotates a healpix map about the polar axis. useful for plotting
-  * Other functions, most of whom are deprecated.
- #### `read_utils.py`
- Functions for reading and writing drone and beam data. Drone log file formats
- are not well documented and change all the time.
-  * `read_map` : replacement for healpy read function that respects nans
-  * `write_map`: replacement for healpy write function that respect nans
-  * `apm_version`: tries to determine the version of ardupilot that wrote a log file.
-  * `read_apm_log_A_B_C` : reads an ardupilot log of version A_B_C
-    * returns position_times, positions,
-    * attitude_times, attitudes,
-    * waypoint_times, waypoint_numbers
-  * `read_echo_spectrum` : reads a spectrum data file output by the ECHO spectrum logger ca 2017 (signalhound + get_sh_spectra)
-  * `read_orbcomm_spectrum` : reads a spectrum data file output by the Bradley orbcomm system (ca 2017)
-  * `channel_select` : given a spectrum, list of frequencies, and desired frequency returns closest frequency and spectrum amplitude
-  * `interp_rx`: interpolates received power onto the measured position time grid
-  * `flag_angles` : flags outlier yaws input times,yaw_angles return matching flag array
-  * `flag_waypoints` : flags a range of time around a list of waypoints
-  * `apply_flagtimes` : Given a list of bad times, a buffer size and a time array, generate a flag table.
-#### `position_utils.py`
- * `latlon2xy` : about what you think
- * `to_spherical` : xyz to spherical
+## Directory Structure:
+
+1. `analysis` : ipython notebooks for data analysis
+2. `bmx` : older work from BMX beam mapping flights
+3. `dronehacks` : older work that contains outdated module scripts
+4. `dronepkg` : the current version of the dronepkg python package
+5. `liveplots` : ipython notebooks for quickly looking at data during acquisitions
+6. `logbook` : the project logbook/wiki where writeups are stored
+7. `tests` : ipython notebooks for developing module functions and debugging
+7. `tutorials` : ipython notebooks that contain tutorials for new users (start here!)
+
+## The 'Dronepkg' Python Package:
+
+The core software package that supports our analysis is the 'dronepkg' package. Here we will list and briefly describe the contained modules and functions contained within the package. At root level, the requirements, setup, LICENSE, and README.md files are found. 
+
+### Modules:
+
+Inside `dronepkg/dronepkg` you will find the following python modules.
+
+To utilize these modules in an analysis notebook, something resembling the following import statement is recommended:
+```
+from dronepkg import corr
+from dronepkg import concat
+from dronepkg import drone
+from dronepkg import bicolog
+import dronepkg.plotting_utils as pu
+import dronepkg.fitting_utils as fu
+import dronepkg.geometry_utils as gu
+import dronepkg.time_utils as tu
+from dronepkg.sites import site
+gbosite=site.site('../dronepkg/dronepkg/sites/GBO_config.npz')
+``` 
+
+#### `bicolog.py`
+  * class `` : 
+
+#### `concat.py`
+This module contains the `CONCAT` class, which is used to concatenate the telescope and drone data. This is accomplished by interpolating the drone's position coordinates at each telescope timestamp.
+  * class `CONCAT` : initialized with only two inputs `CORRDATCLASS` and `DRONEDATCLASS`.
+    * `Extract_Source_Pulses` : This function should only be used if the transmitter source was pulsed. This function then finds the best-fit source pulsing solution by correlating a square wave with the telescope visibility data. You must input the `Period` and `Dutycycle` of the pulse in microseconds.
+    * `Perform_Background_Subtraction` : This function creates a 'background' (`V_bg`) and a 'background subtracted' (`V_bgsub`) visibility matrix from the pulsed source solution.
+
+#### `corr.py`
+  * class `Corr_Data` : This class is used to read in data from an iceboard correlator. When given a directory containing iceboard files, it will automatically isolate the autocorrelations indices, connect subsequent files together, apply a gain calibration, and generate time and frequency axes.
+
+#### `drone.py`
+  *  class `Drone_Data` : This class is used to read in data from the drone. This class currently supports older _processed.csv files and the raw datcon files. Support for the ublox gps files will be added in the near future. 
+
+#### `fitting_utils.py`
+This module contains functions frequently used for fitting data.
+  * `Gauss` : A simple 1d Gaussian, with inputs `(x,a,x0,sigma,k)`.
+
+#### `geometry_utils.py`
+This module contains some frequently used functions for coordinate transforms.
+  * `rot_mat` : this function generates a rotation matrix used for coordinate transformations.
+  * `xyz_to_rpt` : This transforms local cartesian coordinates to polar coordinates.
+
+#### `plotting_utils.py`
+This module contains plotting functions for the `Corr_Data`, `Drone_Data` and `CONCAT` classes. There are a great many of them...
+  * Corr_Data Plotting Functions:
+    * `Plot_Waterfalls` : Waterfall plots of the correlator data, showing all channels, times, and freqs.
+    * `Plot_Saturation_Maps` :  Waterfall plots where non-zero values imply digital saturation.
+    * `Plot_Time_Series` : Time series of selected times and frequencies on all correlator channels.
+    * `Plot_Spectra` : Spectra for each channel, plotted with a variable time-step gap.
+    * `Plot_Gains_vs_Data` : The gain and initial data for each correlator channel.
+  * Drone_Data Plotting Functions: 
+    * `Plot_Drone_Coordinates` : The drones position coordinates in cartesian wrt the origin.
+    * `Plot_Angular_Coordinates` : The drones position coordinates in polar wrt the origin.
+    * `Plot_3d` : 3d Plots in local cartesian and geocentric cartesian coordinate systems
+    * `Plot_Transmitter_Pointing` : A chart showing the drone transmitter vector at each position.
+    * `Plot_Polar_Lines_of_Sight` : The receiver and transmitter respective coordinates for all times.
+  * CONCAT_Data Plotting Functions:
+    * `Plot_Beammap_LC` : This plotting function creates the beautiful beammaps! 
+
 #### `time_utils.py`
-Most of these are of dubious necessity.
- * `unix_to_gps` : thin wrapper around astropy.Time
- * `gps_to_HMS` : convert GPS time to Hours Minutes Seconds, thin wrapper around
-#### `server_utils.py`
-Stuff developed to support real-time operations. This never worked very well with mavlink.
-### Scripts
-#### Jacobs 2017
-Scripts used in the 2017 paper are all run in [one master shell script](https://github.com/dannyjacobs/ECHO_paper1/blob/master/scripts/make_plots.sh)
- * plot_yaw.py
- * plot_GB_pos_power_interp.py
- * ECHO_zipper.py
- * ECHO_mk_beam.py
- * plot_ECHO_GB_power_rms_counts.py
- * plot_ECHO_GB_maps.py
- * plot_GB_slices.py
- * ECHO_sub_tx_beam.py
- * plot_ECHO_GB_ratios.py
- * plot_GB_avg_slices.py
- * plot_MWAtile_slices.py
- * MWATilemodel2hpm.py
- * combine_MWAtile_maps.py
+This module contains a few utility functions used in the `drone.py` and `concat.py` modules:
+  * `interp_time` : Annie's function for generating UTC datetimes from drone data.
+  * `Pulsed_Data_Waveform` : The square wave function used to find when the transmitting source is on/off.
+  
+#### `sites/site.py`
+The `site` class is contained within a `site` module within a `sites` directory, making the full module call `from dronepkg.sites import site`. The `site` class is used to bundle the site data contained in `GBO_config.npz`  to initialize the geometric environments created by the other modules. 
 
- #### Utility Scripts
-  * valon_readwrite.py : program the valon transmitter
-  * gen_spherical_flight_path.py : generate waypoints in a healpix pattern
-  * CST_to_healpix.py : convert the beam file from CST Microwave studio to a healpix map. Note that this should eventually be replaced with [pyuvbeam](https://github.com/RadioAstronomySoftwareGroup/pyuvdata/blob/master/pyuvdata/uvbeam.py).
-
+Below, the variable `gbosite` is defined to illustrate how to utilize the site class to import the data contained in a configuration.npz file:
+```
+from dronepkg.sites import site
+gbosite=site.site('../dronepkg/dronepkg/sites/GBO_config.npz')
+```
+To create a site-specific configuration file, utilize the notebook `sites/Write_Site_Config_NPZs.ipynb` and enter the site data according to the specified conventions. `GBO_config.npz` is one such example.

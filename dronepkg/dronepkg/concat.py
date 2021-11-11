@@ -26,7 +26,7 @@ import dronepkg.geometry_utils as gu
 import dronepkg.time_utils as tu
 
 class CONCAT:
-    def __init__(self,CORRDATCLASS,DRONEDATCLASS,):
+    def __init__(self,CORRDATCLASS,DRONEDATCLASS):
         print('Initializing CONCAT CLASS using:')
         print(" --> "+CORRDATCLASS.Data_Directory)
         print(" --> "+DRONEDATCLASS.FLYTAG)
@@ -107,7 +107,7 @@ class CONCAT:
             t_full=np.array([(m-self.t_arr_datetime[0]).total_seconds() for m in self.t_arr_datetime[:]])
             ## Loop over all time offsets in t_offset_dist to find maximum correlation between squarewave and data:
             for j,t_offset in enumerate(t_offset_dist):
-                shiftedswitch=tu.Interp_Switch(t_full,time_s+t_offset,switch)
+                shiftedswitch=np.interp(t_full,time_s+t_offset,switch)
                 try:
                     Pr_arr[i,j]=pearsonr(normminsubdata.flatten(),shiftedswitch.flatten())[0]
                 except ValueError:
@@ -179,71 +179,3 @@ class CONCAT:
                 #print(k,t_window)
                 self.V_bg[k,:,:]=np.nanmean(self.V[t_window,:,:],axis=0)
         self.V_bgsub=self.V-self.V_bg
-
-    def Plot_Beammap_LC(self,t_bounds=[0,-1],coord_args="LC",pulse_args=None,f_bounds=[300,340],cbounds=[],dotsize=40):
-        fig1=figure(figsize=(16,int(8*self.n_channels/2)))
-        for i in range(int(self.n_channels/2)):
-            ## No pulse_args: all data
-            if pulse_args==None:
-                t_cut=np.arange(self.t_index[t_bounds[0]],self.t_index[t_bounds[1]])
-                pt_colors_1=np.nanmean(self.V[t_cut,f_bounds[0]:f_bounds[1],int(2*i)],axis=1)
-                pt_colors_2=np.nanmean(self.V[t_cut,f_bounds[0]:f_bounds[1],int(2*i)+1],axis=1)
-            ## pulse_args="on" only source on
-            elif pulse_args=="on":
-                t_cut=np.intersect1d(np.arange(self.t_index[t_bounds[0]],self.t_index[t_bounds[1]]),self.inds_on).tolist()
-                pt_colors_1=np.nanmean(self.V[t_cut,f_bounds[0]:f_bounds[1],int(2*i)],axis=1)
-                pt_colors_2=np.nanmean(self.V[t_cut,f_bounds[0]:f_bounds[1],int(2*i)+1],axis=1)
-            ## pulse_args="off" only source off
-            elif pulse_args=="off":
-                t_cut=np.intersect1d(np.arange(self.t_index[t_bounds[0]],self.t_index[t_bounds[1]]),self.inds_off).tolist()
-                pt_colors_1=np.nanmean(self.V[t_cut,f_bounds[0]:f_bounds[1],int(2*i)],axis=1)
-                pt_colors_2=np.nanmean(self.V[t_cut,f_bounds[0]:f_bounds[1],int(2*i)+1],axis=1)
-            ## pulse_args="bg" only show background 
-            elif pulse_args=="bg":
-                t_cut=np.arange(self.t_index[t_bounds[0]],self.t_index[t_bounds[1]]).tolist()
-                pt_colors_1=np.nanmean(self.V_bg[t_cut,f_bounds[0]:f_bounds[1],int(2*i)],axis=1)
-                pt_colors_2=np.nanmean(self.V_bg[t_cut,f_bounds[0]:f_bounds[1],int(2*i)+1],axis=1)
-            ## pulse_args="bgsub" only show background subtracted on points
-            elif pulse_args=="bgsub":
-                t_cut=np.intersect1d(np.arange(self.t_index[t_bounds[0]],self.t_index[t_bounds[1]]),self.inds_on).tolist()
-                pt_colors_1=np.nanmean(self.V_bgsub[t_cut,f_bounds[0]:f_bounds[1],int(2*i)],axis=1)
-                pt_colors_2=np.nanmean(self.V_bgsub[t_cut,f_bounds[0]:f_bounds[1],int(2*i)+1],axis=1)
-            ## Create axes and assign assign x,y points from drone using coords of choice:
-            if coord_args=="LC":
-                ax1=fig1.add_subplot(int(self.n_channels/2),2,int(2*i)+1)
-                ax2=fig1.add_subplot(int(self.n_channels/2),2,int(2*i)+2)
-                x=self.drone_xyz_LC_interp[t_cut,0]
-                y=self.drone_xyz_LC_interp[t_cut,1]
-                im1=ax1.scatter(x,y,s=dotsize,c=pt_colors_1,cmap='gnuplot2',norm=LogNorm())
-                im2=ax2.scatter(x,y,s=dotsize,c=pt_colors_2,cmap='gnuplot2',norm=LogNorm())
-            elif coord_args=="Pol":
-                ax1=fig1.add_subplot(int(self.n_channels/2),2,int(2*i)+1,projection="polar")
-                ax2=fig1.add_subplot(int(self.n_channels/2),2,int(2*i)+2,projection="polar")
-                x=self.drone_rpt_r_per_dish_interp[i,t_cut,1]
-                y=180.0/np.pi*self.drone_rpt_r_per_dish_interp[i,t_cut,2]
-                im1=ax1.scatter(x,y,s=dotsize,c=pt_colors_1,cmap='gnuplot2',norm=LogNorm())
-                im2=ax2.scatter(x,y,s=dotsize,c=pt_colors_2,cmap='gnuplot2',norm=LogNorm())
-            ## set color limits to fix the L,R plots to same colorscale:
-            images=[im1,im2]
-            for im in images:
-                mincl=np.nanmin([im1.get_clim()[0],im2.get_clim()[0]])
-                maxcl=np.nanmax([im1.get_clim()[1],im2.get_clim()[1]])
-                if len(cbounds)==2:
-                    im.set_clim(cbounds[0],cbounds[1])
-                else:
-                    im.set_clim(mincl,maxcl)
-            for j,ax in enumerate([ax1,ax2]):
-                ax.set_facecolor('k')
-                ax.set_title(self.name+' Channel {} Beammap'.format(self.chmap[int(2*i)+j]))
-                if coord_args=="LC":
-                    ax.set_xlabel('X Position $[m]$')
-                    ax.set_ylabel('Y Position $[m]$')
-                    divider=make_axes_locatable(ax)
-                    cax=divider.append_axes("right", size="3%", pad=0.05)
-                    cbar=fig1.colorbar(images[j],cax=cax)
-                    cbar.set_label('Power [$ADU^2$]')
-                if coord_args=="Pol":
-                    cbar=fig1.colorbar(images[j],ax=ax,aspect=40)
-                    cbar.set_label('Power [$ADU^2$]')
-        tight_layout()
-        
