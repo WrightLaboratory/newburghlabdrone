@@ -1,6 +1,5 @@
 # Python Package Name (TBD):
 
-```
 Greetings and welcome to the software and analysis repository for Laura Newburgh's 21cm Drone Calibration group at Yale University. We are currently developing beam calibration techniques for 21cm instruments (like CHIME and HIRAX) using a drone-based transmitter. So far, we have mapped the beams of a single DSA-10 dish at the Owens Valley Radio Observatory (OVRO), the 4-dish BMX array at Brookhaven National Laboratory (BNL), a small testbed radio telescope at Yale's Leitner Family Observatory and Planetarium (LFOP), and an 8 element HIRAX analogue located at Green Bank Observatory (GBO).
 
 Contained within this git repo are python packages/modules for data processing, analysis notebooks, and a logbook that I hope will serve as a project wiki.
@@ -8,7 +7,7 @@ Contained within this git repo are python packages/modules for data processing, 
 Today (Nov. 11th, 2021) is the first large scale working release of the newly refactored code, and I'm excited to share the code I've written for this project. We plan to maintain this as an open source project. If you reuse code, please reference our repository on GitHub https://github.com/WrightLaboratory/newburghlabdrone/ and cite our work. To contact the authors, please will.tyndall at yale.edu
 
 - William Tyndall [WT] - (Graduate Student)
-```
+
 
 ## Cloning and Installation:
 
@@ -62,10 +61,14 @@ gbosite=site.site('../dronepkg/dronepkg/sites/GBO_config.npz')
 ``` 
 
 #### `bicolog.py`
-  * class `` : 
+  * This module contains a model constructed from measurements of our bicolog transmitter.
+  * class `Bicolog_Beam` : This class reads in data from range measurements and creates the beam model when initialized.
+  * `Interpolate_D_ptf` : This is an N-d interpolator that interpolates the Directivity as a function of frequency and pointing.
+  * `Plot_Beam_pcolormesh` : A plotting function for a map of the beam at a single frequency (or a range).
+  * `Plot_Beam_Profiles` : A plotting function for the angular profile of the beam at a single frequency (or a range).
 
 #### `concat.py`
-This module contains the `CONCAT` class, which is used to concatenate the telescope and drone data. This is accomplished by interpolating the drone's position coordinates at each telescope timestamp.
+  * This module contains the `CONCAT` class, which is used to concatenate the telescope and drone data. This is accomplished by interpolating the drone's position coordinates at each telescope timestamp.
   * class `CONCAT` : initialized with only two inputs `CORRDATCLASS` and `DRONEDATCLASS`.
     * `Extract_Source_Pulses` : This function should only be used if the transmitter source was pulsed. This function then finds the best-fit source pulsing solution by correlating a square wave with the telescope visibility data. You must input the `Period` and `Dutycycle` of the pulse in microseconds.
     * `Perform_Background_Subtraction` : This function creates a 'background' (`V_bg`) and a 'background subtracted' (`V_bgsub`) visibility matrix from the pulsed source solution.
@@ -77,16 +80,16 @@ This module contains the `CONCAT` class, which is used to concatenate the telesc
   *  class `Drone_Data` : This class is used to read in data from the drone. This class currently supports older _processed.csv files and the raw datcon files. Support for the ublox gps files will be added in the near future. 
 
 #### `fitting_utils.py`
-This module contains functions frequently used for fitting data.
+  * This module contains functions frequently used for fitting data.
   * `Gauss` : A simple 1d Gaussian, with inputs `(x,a,x0,sigma,k)`.
 
 #### `geometry_utils.py`
-This module contains some frequently used functions for coordinate transforms.
+  * This module contains some frequently used functions for coordinate transforms.
   * `rot_mat` : this function generates a rotation matrix used for coordinate transformations.
   * `xyz_to_rpt` : This transforms local cartesian coordinates to polar coordinates.
 
 #### `plotting_utils.py`
-This module contains plotting functions for the `Corr_Data`, `Drone_Data` and `CONCAT` classes. There are a great many of them...
+  * This module contains plotting functions for the `Corr_Data`, `Drone_Data` and `CONCAT` classes. There are a great many of them...
   * Corr_Data Plotting Functions:
     * `Plot_Waterfalls` : Waterfall plots of the correlator data, showing all channels, times, and freqs.
     * `Plot_Saturation_Maps` :  Waterfall plots where non-zero values imply digital saturation.
@@ -103,16 +106,15 @@ This module contains plotting functions for the `Corr_Data`, `Drone_Data` and `C
     * `Plot_Beammap_LC` : This plotting function creates the beautiful beammaps! 
 
 #### `time_utils.py`
-This module contains a few utility functions used in the `drone.py` and `concat.py` modules:
+  * This module contains a few utility functions used in the `drone.py` and `concat.py` modules:
   * `interp_time` : Annie's function for generating UTC datetimes from drone data.
   * `Pulsed_Data_Waveform` : The square wave function used to find when the transmitting source is on/off.
   
 #### `sites/site.py`
-The `site` class is contained within a `site` module within a `sites` directory, making the full module call `from dronepkg.sites import site`. The `site` class is used to bundle the site data contained in `GBO_config.npz`  to initialize the geometric environments created by the other modules. 
-
-Below, the variable `gbosite` is defined to illustrate how to utilize the site class to import the data contained in a configuration.npz file:
+  * The `site` class is contained within a `site` module within a `sites` directory, making the full module call `from dronepkg.sites import site`. The `site` class is used to bundle the site data contained in `GBO_config.npz`  to initialize the geometric environments created by the other modules. 
+  * To create a site-specific configuration file, utilize the notebook `sites/Write_Site_Config_NPZs.ipynb` and enter the site data according to the specified conventions. `GBO_config.npz` is one such example.
+  * Below, the variable `gbosite` is defined to illustrate how to utilize the site class to import the data contained in a configuration.npz file:
 ```
 from dronepkg.sites import site
 gbosite=site.site('../dronepkg/dronepkg/sites/GBO_config.npz')
 ```
-To create a site-specific configuration file, utilize the notebook `sites/Write_Site_Config_NPZs.ipynb` and enter the site data according to the specified conventions. `GBO_config.npz` is one such example.
