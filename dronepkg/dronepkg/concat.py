@@ -42,6 +42,7 @@ class CONCAT:
         self.n_dishes=CORRDATCLASS.n_dishes
         self.n_channels=CORRDATCLASS.n_channels
         self.chmap=CORRDATCLASS.chmap
+        self.automap=CORRDATCLASS.automap
         self.origin=DRONEDATCLASS.origin
         self.prime_origin=DRONEDATCLASS.prime_origin
         self.dish_keystrings=DRONEDATCLASS.dish_keystrings
