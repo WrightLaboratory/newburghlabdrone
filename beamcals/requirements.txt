@@ -1,0 +1,9 @@
+numpy
+matplotlib
+datetime
+scipy
+astropy
+pytz
+pygeodesy
+pandas
+h5py
