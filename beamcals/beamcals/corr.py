@@ -73,6 +73,7 @@ class Corr_Data:
                 self.gain_exp=fg['gain_exp'][0]
                 digital_gain=fg['gain_coeff'][0] 
                 digital_gain*=np.power(2,fg['gain_exp'][0])[np.newaxis,:]
+                fg.close()
             except OSError:
                 print(" --> ERROR: Gain file not found in specified directory!")
         elif Fix_Gains==True:
@@ -114,7 +115,6 @@ class Corr_Data:
                     self.sat[i,:,:,j]=fd_n['sat'][:,flb:fub,k].real
                 self.t[i,:]=tm
                 fd.close()
-                fg.close()
             except OSError:
                 print('Skipping file: {}'.format(file))    
         ## reshape these arrays
