@@ -28,7 +28,7 @@ import datetime
 import pytz
 
 class Corr_Data:
-    def __init__(self,Data_Directory,Gain_Directory,site_class,Data_File_Index=None,Load_Gains=True,Fix_Gains=False,Apply_Gains=True,Gain_Params=[1.0,24.0],fbounds=[0,-1]):
+    def __init__(self,Data_Directory,Gain_Directory,site_class,Data_File_Index=None,Load_Gains=True,Fix_Gains=False,Apply_Gains=True,Gain_Params=[1.0,24.0],fbounds=[0,1024]):
         ## Get data files using os instead of git:
         self.Data_Directory=Data_Directory
         self.Gain_Directory=Gain_Directory
@@ -77,7 +77,7 @@ class Corr_Data:
             except OSError:
                 print(" --> ERROR: Gain file not found in specified directory!")
         elif Fix_Gains==True:
-            digital_gain=Gain_Params[0]*np.array((2**Gain_Params[1])*np.ones((len(self.freq),self.n_channels))).astype(complex)
+            digital_gain=Gain_Params[0]*np.array((2**Gain_Params[1])*np.ones((vis.shape[1],self.n_channels))).astype(complex)
             self.gain_coeffs=Gain_Params[0]*np.ones(len(self.freq))
             self.gain_exp=Gain_Params[1]*np.ones(vis.shape[2])
         elif Apply_Gains==False:
@@ -86,7 +86,6 @@ class Corr_Data:
             self.gain_exp=np.ones(vis.shape[2])
         self.gain=digital_gain.real[flb:fub,:]
         fd.close()
-        fg.close()
         ## Loop over all files to populate V_full,t_full
         print(" --> Arrays initialized with shape {}".format(self.V.shape))
         print("Assigning array values by reading in data files:")
