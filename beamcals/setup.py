@@ -17,5 +17,5 @@ setuptools.setup(
     ],
     package_dir={"beamcals": "beamcals"},
     packages=setuptools.find_packages(include=["beamcals", 'beamcals.*']),
-    python_requires=">=3.8",
+    python_requires=">=3.7",
 )
