@@ -22,8 +22,11 @@ from matplotlib import colors
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib.colors import LogNorm
 from matplotlib.ticker import MultipleLocator
+from scipy.optimize import least_squares
 import numpy as np
 import h5py
+
+import beamcals.fitting_utils as fu
 
 ################################################
 ##                  Corr_Data                 ##
@@ -289,4 +292,122 @@ def Plot_Beammap(concat_class,t_bounds=[0,-1],coord_args="LC",pulse_args=None,f_
             if coord_args=="Pol":
                 cbar=fig1.colorbar(images[j],ax=ax,aspect=40)
                 cbar.set_label('Power [$ADU^2$]')
+    tight_layout()
+    
+def Synchronization_Verification_Plots(inputconcat,chans=np.arange(0,2),find=900):
+    ## Produce additional verification plots:
+    ## Make figures for the best-fit time offset at a particular frequency:
+    figure,[[ax1,ax2],[ax3,ax4],[ax5,ax6],[ax7,ax8],[ax9,ax10],[ax11,ax12]]=subplots(nrows=6,ncols=2,figsize=(16,40))
+    ## Make temp concat file with tfinex (best fit time offset)  
+    ## Loop through fits and make the plot:
+    for j,chan in enumerate(chans):
+        ## define timecuts for amplitude:
+        tacut=inputconcat.t_index[inputconcat.V[:,find,chan]<0.999*(np.nanmax(inputconcat.V[:,find,chan]))]
+        ## define timecuts for cartesian coordinates:
+        txcut=inputconcat.t_index[np.abs(inputconcat.drone_xyz_LC_interp[:,0])<50.0]
+        tycut=inputconcat.t_index[np.abs(inputconcat.drone_xyz_LC_interp[:,1])<50.0]
+        tzcut=inputconcat.t_index[np.abs(inputconcat.drone_xyz_LC_interp[:,2])>150.0]
+        ttcut=np.intersect1d(np.intersect1d(np.intersect1d(np.intersect1d(txcut,tycut),tzcut),tacut),inputconcat.inds_on)
+        ## data points for fit:
+        mbx=inputconcat.drone_xyz_LC_interp[ttcut,0]
+        mby=inputconcat.drone_xyz_LC_interp[ttcut,1]
+        mbz=inputconcat.drone_xyz_LC_interp[ttcut,2]
+        mbV=inputconcat.V[ttcut,find,j]
+        mb_input_data=np.array([mbx,mby,mbV])
+        ## shared params:
+        amp0=np.nanmax(mbV)
+        bg0=np.nanmin(mbV)
+        x00=inputconcat.dish_coords[int(j/2),0]
+        y00=inputconcat.dish_coords[int(j/2),1]
+        ## airy params:
+        rad0=25.0
+        ## 2dgauss params:
+        xsig0=6.0
+        ysig0=6.0
+        ## initial guess and bounds:
+        pA=np.array([amp0,x00,y00,rad0,bg0])
+        pG=np.array([amp0,x00,xsig0,y00,ysig0,bg0])
+        ## run the fits:
+        Apopt=least_squares(fu.Airy_2d_LC_opt,x0=pA,args=mb_input_data).x
+        Gpopt=least_squares(fu.Gauss_2d_LC_opt,x0=pG,args=mb_input_data).x
+        ## simulate space of these coords:
+        simx=np.outer(np.linspace(np.nanmin(mbx),np.nanmax(mbx),100),np.ones(100)).flatten()
+        simy=np.outer(np.ones(100),np.linspace(np.nanmin(mby),np.nanmax(mby),100)).flatten()
+        simV=fu.Gauss_2d_LC_func(Gpopt,simx,simy)
+        ## PLOT 1
+        ax=[ax1,ax2][j]
+        ax.set_title('Channel {} Beammap - Full Time'.format(j))
+        ax.set_facecolor('k')
+        tbig=np.intersect1d(tzcut,inputconcat.inds_on)
+        im=ax.scatter(inputconcat.drone_xyz_LC_interp[tbig,0],inputconcat.drone_xyz_LC_interp[tbig,1],c=inputconcat.V[tbig,find,j],s=20,norm=LogNorm())
+        #im.set_clim(np.nanmin(mbV),np.nanmax(mbV))
+        divider=make_axes_locatable(ax)
+        cax=divider.append_axes("right", size="3%", pad=0.05)
+        cbar=figure.colorbar(im,cax=cax)
+        cbar.set_label('Power [$ADU^2$]')
+        ## PLOT 1
+        ax=[ax3,ax4][j]
+        ax.set_title('Channel {} Beammap - Points Fit w/ 2DGauss'.format(j))
+        ax.set_facecolor('k')
+        im=ax.scatter(mbx,mby,c=mbV,norm=LogNorm())
+        im.set_clim(np.nanmax((np.nanmin(simV),np.nanmin(mbV))),np.nanmax((np.nanmax(simV),np.nanmax(mbV))))
+        divider=make_axes_locatable(ax)
+        cax=divider.append_axes("right", size="3%", pad=0.05)
+        cbar=figure.colorbar(im,cax=cax)
+        cbar.set_label('Power [$ADU^2$]')
+        ## PLOT 2
+        ax=[ax5,ax6][j]
+        ax.set_title('Channel {} Beammap - Best Fit 2DGauss'.format(j))
+        ax.set_facecolor('k')
+        im=ax.scatter(simx,simy,c=simV,norm=LogNorm())
+        im.set_clim(np.nanmax((np.nanmin(simV),np.nanmin(mbV))),np.nanmax((np.nanmax(simV),np.nanmax(mbV))))
+        divider=make_axes_locatable(ax)
+        cax=divider.append_axes("right", size="3%", pad=0.05)
+        cbar=figure.colorbar(im,cax=cax)
+        cbar.set_label('Power [$ADU^2$]')
+        ax.plot(Gpopt[1],Gpopt[3],'wx',label='[{:.2f},{:.2f}]'.format(Gpopt[1],Gpopt[3]))
+        ax.legend()
+        ## PLOT 3
+        ax=[ax7,ax8][j]
+        ax.set_title('Channel {} Beammap - Overlay'.format(j))
+        ax.set_facecolor('k')
+        im=ax.scatter(simx,simy,c=simV,norm=LogNorm())
+        im.set_clim(np.nanmax((np.nanmin(simV),np.nanmin(mbV))),np.nanmax((np.nanmax(simV),np.nanmax(mbV))))
+        im=ax.scatter(mbx,mby,c=mbV,norm=LogNorm())
+        im.set_clim(np.nanmax((np.nanmin(simV),np.nanmin(mbV))),np.nanmax((np.nanmax(simV),np.nanmax(mbV))))
+        divider=make_axes_locatable(ax)
+        cax=divider.append_axes("right", size="3%", pad=0.05)
+        cbar=figure.colorbar(im,cax=cax)
+        cbar.set_label('Power [$ADU^2$]')
+        ax.plot(Gpopt[1],Gpopt[3],'wx',label='[{:.2f},{:.2f}]'.format(Gpopt[1],Gpopt[3]))
+        ax.legend()
+        ## PLOT 4
+        ax=[ax9,ax10][j]
+        ax.set_title('Channel {} Data vs Best-Fit 2DGauss'.format(j))
+        ax.set_facecolor('k')
+        ax.scatter(mbx,mbV,c=mbV,norm=LogNorm())
+        ax.plot(np.linspace(np.nanmin(mbx),np.nanmax(mbx),100),fu.Gauss_2d_LC_func(Gpopt,np.linspace(np.nanmin(mbx),np.nanmax(mbx),100),Gpopt[3]*np.ones(100)),'w.--',label='X center pass 2DGauss')
+        ax.plot(np.linspace(np.nanmin(mbx),np.nanmax(mbx),100),fu.Airy_2d_LC_func(Apopt,np.linspace(np.nanmin(mbx),np.nanmax(mbx),100),Apopt[2]*np.ones(100)),'c.--',label='X center pass Airy')
+        ax.axvline(Gpopt[1],c='w',label='X center = {:.2f}'.format(Gpopt[1]))
+        ax.semilogy
+        ax.legend()
+        ## PLOT 4
+        ax=[ax11,ax12][j]
+        ax.set_title('Channel {} Data vs Best-Fit 2DGauss'.format(j))
+        ax.set_facecolor('k')
+        ax.scatter(mby,mbV,c=mbV,norm=LogNorm())
+        ax.plot(np.linspace(np.nanmin(mby),np.nanmax(mby),100),fu.Gauss_2d_LC_func(Gpopt,Gpopt[1]*np.ones(100),np.linspace(np.nanmin(mby),np.nanmax(mby),100)),'w.--',label='Y center pass 2DGauss')
+        ax.plot(np.linspace(np.nanmin(mby),np.nanmax(mby),100),fu.Airy_2d_LC_func(Apopt,Apopt[1]*np.ones(100),np.linspace(np.nanmin(mby),np.nanmax(mby),100)),'c.--',label='Y center pass Airy')
+        ax.axvline(Gpopt[3],c='w',label='Y center = {:.2f}'.format(Gpopt[3]))
+        ax.semilogy
+        ax.legend()
+    for i,ax in enumerate([ax1,ax2,ax3,ax4,ax5,ax6,ax7,ax8]):
+        ax.set_xlabel('X $[m]$')
+        ax.set_ylabel('Y $[m]$')
+    for i,ax in enumerate([ax9,ax10]):
+        ax.set_xlabel('X $[m]$')
+        ax.set_ylabel('Power [$ADU^2$]')
+    for i,ax in enumerate([ax11,ax12]):
+        ax.set_xlabel('Y $[m]$')
+        ax.set_ylabel('Power [$ADU^2$]')
     tight_layout()

@@ -90,6 +90,16 @@ class Drone_Data:
                 self.latitude=np.array(drone_data["RTKdata:Lat_P"])
                 self.longitude=np.array(drone_data["RTKdata:Lon_P"])
                 self.hmsl=np.array(drone_data["RTKdata:Hmsl_P"])
+                nandtestsum=len(drone_data["RTKdata:Lat_P"][~np.isnan(drone_data["RTKdata:Lat_P"])])
+                print(" ----> RTK data contains {}/{} non-nan values".format(nandtestsum,len(drone_data["RTKdata:Lat_P"])))
+                if nandtestsum>0:
+                    pass
+                if nandtestsum==0:
+                    print(" ----> RTK Data not usable for this data file...")
+                    print(" --> Loading position data from GPS(0) instead:")
+                    self.latitude=np.array(drone_data["GPS(0):Lat"])
+                    self.longitude=np.array(drone_data["GPS(0):Long"])
+                    self.hmsl=np.array(drone_data["GPS(0):heightMSL"])
             except KeyError:
                 ## If RTK data is not present, default to GPS(0) data:
                 print(" ----> RTK Data not found for this data file...")
