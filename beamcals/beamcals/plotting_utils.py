@@ -228,7 +228,7 @@ def Plot_Polar_Lines_of_Sight(drone_class,t_bounds=[0,-1],t_step=1,dishid=0):
 ################################################
 
 def Plot_Beammap(concat_class,t_bounds=[0,-1],coord_args="LC",pulse_args=None,f_bounds=[300,340],cbounds=[],dotsize=40):
-    fig1=figure(figsize=(16,int(8*concat_class.n_channels/2)))
+    fig1=figure(figsize=(16,int(7*concat_class.n_channels/2)))
     for i in range(int(concat_class.n_channels/2)):
         ## No pulse_args: all data
         if pulse_args==None:

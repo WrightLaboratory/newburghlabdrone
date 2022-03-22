@@ -562,19 +562,19 @@ class CONCAT:
         if self.traceback==False:
             pass
     
-    def Main_Beam_Fitting(self,fit_param_directory='/hirax/GBO_Analysis_Outputs/main_beam_fits/',chans=np.arange(16),freqs=np.arange(1024)):
+    def Main_Beam_Fitting(self,fit_param_directory='/hirax/GBO_Analysis_Outputs/main_beam_fits/',freqs=np.arange(1024)):
         if self.traceback==True:
-            print('Performing 2DGauss and Airy fits for [{}]chans x [{}]freqs:'.format(len(chans),len(freqs)))
+            print('Performing 2DGauss and Airy fits for [{}]chans x [{}]freqs:'.format(self.n_channels,len(freqs)))
         if self.traceback==False:
             pass
-        A_popt,A_PR,G_popt,G_PR=fu.Fit_Main_Beam(inputconcat=self,chans=chans,freqs=freqs)
+        A_popt,A_PR,G_popt,G_PR=fu.Fit_Main_Beam(inputconcat=self,chans=self.chmap,freqs=freqs)
         self.A_popt=A_popt
         self.A_PR=A_PR
         self.G_popt=G_popt
         self.G_PR=G_PR
         if self.traceback==True:
-            print('  --> Saving output fit parameters as an .npz filetype:')
             if self.save_traceback==True:
+                print('  --> Saving output fit parameters as an .npz filetype:')
                 tmpfitpath=fit_param_directory+self.Output_Prefix+'_2dGauss_and_Airy_Params.npz'
                 np.savez(tmpfitpath,A_popt=A_popt,A_PR=A_PR,G_popt=G_popt,G_PR=G_PR)      
                 print('  --> {}'.format(self.Output_Prefix+'_2dGauss_and_Airy_Params.npz'))
