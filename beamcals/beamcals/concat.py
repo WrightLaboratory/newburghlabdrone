@@ -35,7 +35,7 @@ import beamcals.time_utils as tu
 from beamcals import concat
 
 class CONCAT:
-    def __init__(self,CORRDATCLASS,DRONEDATCLASS,config_directory="/hirax/GBO_Analysis_Outputs/concat_config_files/",output_directory='/hirax/GBO_Analysis_Outputs/',load_yaml=True,save_traceback=True,traceback=True):
+    def __init__(self,CORRDATCLASS,DRONEDATCLASS,config_directory="/hirax/GBO_Analysis_Outputs/concat_config_files/",output_directory='/hirax/GBO_Analysis_Outputs/',load_yaml=True,traceback=True,save_traceback=True):
         ## Decide whether or not we want a traceback for print statements/verification plots:
         self.traceback=traceback
         ## Decide whether or not we want to save traceback output plots:
@@ -348,7 +348,7 @@ class CONCAT:
                 origtaxis=inputdrone.t_arr_datetime[:]
                 tempdrone=inputdrone
                 tempdrone.t_arr_datetime=inputdrone.t_arr_datetime+datetime.timedelta(seconds=ttry)
-                tempconcat=concat.CONCAT(CORRDATCLASS=inputcorr,DRONEDATCLASS=tempdrone,load_yaml=False,traceback=False)
+                tempconcat=concat.CONCAT(CORRDATCLASS=inputcorr,DRONEDATCLASS=tempdrone,load_yaml=False,traceback=False,save_traceback=False)
                 try:
                     tempconcat.inds_on=self.inds_on
                 except AttributeError:
@@ -385,7 +385,7 @@ class CONCAT:
                 origtaxis=inputdrone.t_arr_datetime[:]
                 tempdrone=inputdrone
                 tempdrone.t_arr_datetime=inputdrone.t_arr_datetime+datetime.timedelta(seconds=ttry)
-                tempconcat=concat.CONCAT(CORRDATCLASS=inputcorr,DRONEDATCLASS=tempdrone,load_yaml=False,traceback=False)
+                tempconcat=concat.CONCAT(CORRDATCLASS=inputcorr,DRONEDATCLASS=tempdrone,load_yaml=False,traceback=False,save_traceback=False)
                 try:
                     tempconcat.inds_on=self.inds_on
                 except AttributeError:
@@ -446,7 +446,7 @@ class CONCAT:
         origtaxis=inputdrone.t_arr_datetime[:]
         tempdrone=inputdrone
         tempdrone.t_arr_datetime=inputdrone.t_arr_datetime+datetime.timedelta(seconds=self.t_delta_dji)
-        tempconcat=concat.CONCAT(CORRDATCLASS=inputcorr,DRONEDATCLASS=tempdrone,load_yaml=False,traceback=False)
+        tempconcat=concat.CONCAT(CORRDATCLASS=inputcorr,DRONEDATCLASS=tempdrone,load_yaml=False,traceback=False,save_traceback=False)
         self.drone_llh_interp=tempconcat.drone_llh_interp
         self.drone_xyz_LC_interp=tempconcat.drone_xyz_LC_interp
         self.drone_rpt_interp=tempconcat.drone_rpt_interp
