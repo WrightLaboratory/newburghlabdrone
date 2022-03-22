@@ -6,7 +6,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="beamcals",
-    version="1.0",
+    version="1.1",
     author="Will Tyndall",
     author_email="will.tyndall@yale.edu",
     description="BEAm Mapping CALibration System",
