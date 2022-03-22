@@ -30,29 +30,39 @@ def Airy_2d_LC_func(P,x,y):
     amp,x0,y0,rad,c=P
     return AD.evaluate(x,y,amp,x0,y0,rad)+c
 
-def Gauss_2d_LC_opt(P,x,y,V):
-    amp,x0,xsig,y0,ysig,c=P
-    return amp*np.exp(-0.5*((((x-x0)/xsig)**2.0)+(((y-y0)/ysig)**2.0)))+c-V
-
 def Gauss_2d_LC_func(P,x,y):
-    amp,x0,xsig,y0,ysig,c=P
-    return amp*np.exp(-0.5*((((x-x0)/xsig)**2.0)+(((y-y0)/ysig)**2.0)))+c
+    amp,x0,xsig,y0,ysig,theta,c=P
+    A=(0.5*(((np.cos(theta)/xsig)**2.0)+((np.sin(theta)/ysig)**2.0)))
+    B=(0.25*((np.sin(2.0*theta)/(ysig**2.0))-(np.sin(2.0*theta)/(xsig**2.0))))
+    C=(0.5*(((np.sin(theta)/xsig)**2.0)+((np.cos(theta)/ysig)**2.0)))
+    return amp*np.exp(-1.0*((A*((x-x0)**2.0))+(2.0*B*(x-x0)*(y-y0))+(C*((y-y0)**2.0))))+c
 
-def Fit_Main_Beam(inputconcat,chans,freqs,coordbounds=[50.0,50.0,150.0],ampbound=0.98):
+def Gauss_2d_LC_opt(P,x,y,V):
+    amp,x0,xsig,y0,ysig,theta,c=P
+    A=(0.5*(((np.cos(theta)/xsig)**2.0)+((np.sin(theta)/ysig)**2.0)))
+    B=(0.25*((np.sin(2.0*theta)/(ysig**2.0))-(np.sin(2.0*theta)/(xsig**2.0))))
+    C=(0.5*(((np.sin(theta)/xsig)**2.0)+((np.cos(theta)/ysig)**2.0)))
+    return amp*np.exp(-1.0*((A*((x-x0)**2.0))+(2.0*B*(x-x0)*(y-y0))+(C*((y-y0)**2.0))))+c-V
+
+def Fit_Main_Beam(inputconcat,chans,freqs,coordbounds=[50.0,50.0,150.0],ampbound=0.999):
     A_popt=np.zeros((len(chans),len(freqs),5))
     A_PR=np.zeros((len(chans),len(freqs)))
-    G_popt=np.zeros((len(chans),len(freqs),6))
+    G_popt=np.zeros((len(chans),len(freqs),7))
     G_PR=np.zeros((len(chans),len(freqs)))
     ## define timecuts for cartesian coordinates:
     txcut=inputconcat.t_index[np.abs(inputconcat.drone_xyz_LC_interp[:,0])<coordbounds[0]]
     tycut=inputconcat.t_index[np.abs(inputconcat.drone_xyz_LC_interp[:,1])<coordbounds[1]]
     tzcut=inputconcat.t_index[np.abs(inputconcat.drone_xyz_LC_interp[:,2])>coordbounds[2]]
+    coordcut=np.intersect1d(np.intersect1d(txcut,tycut),tzcut)
     for i,chan in enumerate(chans):
         for j,find in enumerate(freqs):
             try:
                 ## apply amplitude cut:
                 tacut=inputconcat.t_index[inputconcat.V[:,find,chan]<ampbound*(np.nanmax(inputconcat.V[:,find,chan]))]
-                ttcut=np.intersect1d(np.intersect1d(np.intersect1d(np.intersect1d(txcut,tycut),tzcut),tacut),inputconcat.inds_on)
+                try:
+                    ttcut=np.intersect1d(np.intersect1d(coordcut,tacut),inputconcat.inds_on)
+                except AttributeError:
+                    ttcut=np.intersect1d(coordcut,tacut)                    
                 ## pull the proper coords for fitting:
                 mbx=inputconcat.drone_xyz_LC_interp[ttcut,0]
                 mby=inputconcat.drone_xyz_LC_interp[ttcut,1]
@@ -69,16 +79,18 @@ def Fit_Main_Beam(inputconcat,chans,freqs,coordbounds=[50.0,50.0,150.0],ampbound
                 ## 2dgauss params:
                 xsig0=6.0
                 ysig0=6.0
+                theta0=0.0
                 ## initial guess and bounds:
                 pA=np.array([amp0,x00,y00,rad0,bg0])
-                pG=np.array([amp0,x00,xsig0,y00,ysig0,bg0])
+                pG=np.array([amp0,x00,xsig0,y00,ysig0,theta0,bg0])
                 ## run the fits:
                 A_popt[i,j]=least_squares(Airy_2d_LC_opt,x0=pA,args=mb_input_data).x
                 A_PR[i,j]=pearsonr(mbV,Airy_2d_LC_func(A_popt[i,j,:],mbx,mby))[0]
                 G_popt[i,j]=least_squares(Gauss_2d_LC_opt,x0=pG,args=mb_input_data).x
                 G_PR[i,j]=pearsonr(mbV,Gauss_2d_LC_func(G_popt[i,j,:],mbx,mby))[0]
             except ValueError:
-                AFit_f_params[i,j,k,:]=np.NAN*np.zeros(5)
-                GFit_f_params[i,j,k,:]=np.NAN*np.zeros(6)
-                PRarr[i,j,k]=np.NAN
+                A_popt[i,j,:]=np.NAN*np.zeros(5)
+                A_PR[i,j]=np.NAN
+                G_popt[i,j,:]=np.NAN*np.zeros(7)
+                G_PR[i,j]=np.NAN
     return A_popt,A_PR,G_popt,G_PR

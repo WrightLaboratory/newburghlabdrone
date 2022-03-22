@@ -294,7 +294,7 @@ def Plot_Beammap(concat_class,t_bounds=[0,-1],coord_args="LC",pulse_args=None,f_
                 cbar.set_label('Power [$ADU^2$]')
     tight_layout()
     
-def Synchronization_Verification_Plots(inputconcat,chans=np.arange(0,2),find=900):
+def Synchronization_Verification_Plots(inputconcat,chans=np.arange(0,2),find=900,coordbounds=[50.0,50.0,150.0],ampbound=0.999):
     ## Produce additional verification plots:
     ## Make figures for the best-fit time offset at a particular frequency:
     figure,[[ax1,ax2],[ax3,ax4],[ax5,ax6],[ax7,ax8],[ax9,ax10],[ax11,ax12]]=subplots(nrows=6,ncols=2,figsize=(16,40))
@@ -302,12 +302,16 @@ def Synchronization_Verification_Plots(inputconcat,chans=np.arange(0,2),find=900
     ## Loop through fits and make the plot:
     for j,chan in enumerate(chans):
         ## define timecuts for amplitude:
-        tacut=inputconcat.t_index[inputconcat.V[:,find,chan]<0.999*(np.nanmax(inputconcat.V[:,find,chan]))]
+        tacut=inputconcat.t_index[inputconcat.V[:,find,chan]<ampbound*(np.nanmax(inputconcat.V[:,find,chan]))]
         ## define timecuts for cartesian coordinates:
-        txcut=inputconcat.t_index[np.abs(inputconcat.drone_xyz_LC_interp[:,0])<50.0]
-        tycut=inputconcat.t_index[np.abs(inputconcat.drone_xyz_LC_interp[:,1])<50.0]
-        tzcut=inputconcat.t_index[np.abs(inputconcat.drone_xyz_LC_interp[:,2])>150.0]
-        ttcut=np.intersect1d(np.intersect1d(np.intersect1d(np.intersect1d(txcut,tycut),tzcut),tacut),inputconcat.inds_on)
+        txcut=inputconcat.t_index[np.abs(inputconcat.drone_xyz_LC_interp[:,0])<coordbounds[0]]
+        tycut=inputconcat.t_index[np.abs(inputconcat.drone_xyz_LC_interp[:,1])<coordbounds[1]]
+        tzcut=inputconcat.t_index[np.abs(inputconcat.drone_xyz_LC_interp[:,2])>coordbounds[2]]
+        coordcut=np.intersect1d(np.intersect1d(txcut,tycut),tzcut)
+        try:
+            ttcut=np.intersect1d(np.intersect1d(coordcut,tacut),inputconcat.inds_on)
+        except AttributeError:
+            ttcut=np.intersect1d(coordcut,tacut)
         ## data points for fit:
         mbx=inputconcat.drone_xyz_LC_interp[ttcut,0]
         mby=inputconcat.drone_xyz_LC_interp[ttcut,1]
@@ -324,9 +328,10 @@ def Synchronization_Verification_Plots(inputconcat,chans=np.arange(0,2),find=900
         ## 2dgauss params:
         xsig0=6.0
         ysig0=6.0
+        theta0=0.0
         ## initial guess and bounds:
         pA=np.array([amp0,x00,y00,rad0,bg0])
-        pG=np.array([amp0,x00,xsig0,y00,ysig0,bg0])
+        pG=np.array([amp0,x00,xsig0,y00,ysig0,theta0,bg0])
         ## run the fits:
         Apopt=least_squares(fu.Airy_2d_LC_opt,x0=pA,args=mb_input_data).x
         Gpopt=least_squares(fu.Gauss_2d_LC_opt,x0=pG,args=mb_input_data).x
@@ -338,7 +343,10 @@ def Synchronization_Verification_Plots(inputconcat,chans=np.arange(0,2),find=900
         ax=[ax1,ax2][j]
         ax.set_title('Channel {} Beammap - Full Time'.format(j))
         ax.set_facecolor('k')
-        tbig=np.intersect1d(tzcut,inputconcat.inds_on)
+        try:
+            tbig=np.intersect1d(tzcut,inputconcat.inds_on)
+        except AttributeError:
+            tbig=tzcut
         im=ax.scatter(inputconcat.drone_xyz_LC_interp[tbig,0],inputconcat.drone_xyz_LC_interp[tbig,1],c=inputconcat.V[tbig,find,j],s=20,norm=LogNorm())
         #im.set_clim(np.nanmin(mbV),np.nanmax(mbV))
         divider=make_axes_locatable(ax)

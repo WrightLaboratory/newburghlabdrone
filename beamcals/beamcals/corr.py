@@ -34,7 +34,7 @@ class Corr_Data:
         self.Gain_Directory=Gain_Directory
         self.filenames=np.sort([x for x in os.listdir(self.Data_Directory) if ".lock" not in x])[:-1]
         print('Initializing Correlator Class using:')
-        print(" --> "+self.Data_Directory)
+        print("  --> "+self.Data_Directory)
         ## Load first data file to get array dimensions for V,t,f,prod:
         fd=h5py.File(self.Data_Directory+self.filenames[0], 'r')
         self.fbounds=fbounds
@@ -75,7 +75,7 @@ class Corr_Data:
                 digital_gain*=np.power(2,fg['gain_exp'][0])[np.newaxis,:]
                 fg.close()
             except OSError:
-                print(" --> ERROR: Gain file not found in specified directory!")
+                print("  --> ERROR: Gain file not found in specified directory!")
         elif Fix_Gains==True:
             digital_gain=Gain_Params[0]*np.array((2**Gain_Params[1])*np.ones((vis.shape[1],self.n_channels))).astype(complex)
             self.gain_coeffs=Gain_Params[0]*np.ones(len(self.freq))
@@ -87,11 +87,11 @@ class Corr_Data:
         self.gain=digital_gain.real[flb:fub,:]
         fd.close()
         ## Loop over all files to populate V_full,t_full
-        print(" --> Arrays initialized with shape {}".format(self.V.shape))
+        print("  --> Arrays initialized with shape {}".format(self.V.shape))
         print("Assigning array values by reading in data files:")
         for i,file in enumerate(self.filenames[Data_File_Index]):
             try:
-                print("\r --> Loading File: {}/{}".format(self.filenames[i],self.filenames[-1]),end="")
+                print("\r  --> Loading File: {}/{}".format(self.filenames[i],self.filenames[-1]),end="")
                 fd_n=h5py.File(self.Data_Directory+self.filenames[i], 'r')
                 vis=fd_n['vis'][:,flb:fub,:] # Visibility matrix
                 ##distinguish bw processed and unprocessed files
@@ -115,7 +115,8 @@ class Corr_Data:
                 self.t[i,:]=tm
                 fd.close()
             except OSError:
-                print('Skipping file: {}'.format(file))    
+                print('\nSkipping file: {}'.format(file))    
+        print("\n  --> Finished. Reshaping arrays.")
         ## reshape these arrays
         self.V=self.V.reshape((len(Data_File_Index)*vis.shape[0],vis.shape[1],self.n_channels))
         self.t=self.t.reshape(len(Data_File_Index)*vis.shape[0])

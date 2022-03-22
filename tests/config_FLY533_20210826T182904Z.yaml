@@ -1,0 +1,78 @@
+#YAML_CONFIG_FILE for FLY533 and 20210826T182904Z
+#LIST OF SUCCESFULLY RUN CONCAT CLASS FUNCTIONS:
+# --> [X] concat.__init__()
+# --> [X] concat.Extract_Source_Pulses()
+# --> [X] concat.Perform_Background_Subtraction()
+# --> [X] concat.Synchronization_Function()
+
+#FILENAMES AND PATHS ON DISK TO CONCATENATED FILES:
+file_info:
+  Data_Directory: /hirax/GBO_Aug_2021/TONE_ACQ/20210826T182904Z_yale_drone/corr/20210826T182915Z/
+  Drone_Directory: /hirax/all_drone_data/datcon_csv/
+  FLYTAG: FLY533.csv
+  Gain_Directory: /hirax/GBO_Aug_2021/TONE_ACQ/digital_gains/20210826T182904Z_yale_drone_yale_digitalgain/
+  filenames: ['0000', '0001', '0002', '0003', '0004', '0005', '0006', '0007', 0008,
+    0009, '0010', '0011', '0012', '0013', '0014', '0015', '0016', '0017', 0018, 0019,
+    '0020', '0021', '0022', '0023', '0024', '0025', '0026', '0027', 0028, 0029, '0030',
+    '0031', '0032', '0033', '0034', '0035', '0036', '0037', 0038, 0039, '0040', '0041',
+    '0042', '0043', '0044', '0045', '0046', '0047', 0048, 0049, '0050', '0051', '0052',
+    '0053', '0054', '0055', '0056', '0057', 0058, 0059, '0060', '0061', '0062', '0063',
+    '0064', '0065', '0066', '0067', 0068, 0069, '0070', '0071', '0072', '0073', '0074',
+    '0075', '0076', '0077', 0078, 0079, 0080, 0081, 0082, 0083, 0084, 0085, 0086,
+    0087, 0088, 0089, 0090, 0091, 0092, 0093, 0094, 0095, 0096, 0097, 0098, 0099,
+    '0100', '0101', '0102', '0103', '0104', '0105', '0106', '0107', 0108, 0109, '0110',
+    '0111', '0112', '0113', '0114', '0115', '0116', '0117', 0118, 0119, '0120', '0121',
+    '0122', '0123']
+  gainfile: 00000011.h5
+  name: GBO_HIRAX_ARRAY
+
+#INITIAL SITE GEOMETRY PARAMETERS AND VARIABLES USED:
+site_geometry_i:
+  automap: [0, 16, 45, 31, 58, 70, 91, 81, 108, 100, 115, 121, 126, 130, 133, 135]
+  chmap: [0, 1, 3, 2, 4, 5, 7, 6, 9, 8, 10, 11, 12, 13, 14, 15]
+  dish_coords:
+  - [0.0, 0.0, 0.0]
+  - [-24.215395745765452, -12.605737141316427, 0.0]
+  - [-8.403824760877617, 16.143597163843634, 0.0]
+  - [-8.071798581921817, -4.2019123804388085, 0.0]
+  - [-12.273710962360624, 3.869886201483008, 0.0]
+  - [-16.475623342799434, 11.941684783404824, 0.0]
+  - [-20.345509544282443, -0.33202617895580033, 0.0]
+  - [-28.41730812620426, -4.53393855939461, 0.0]
+  dish_keystrings: [Dish_0, Dish_7, Dish_2, Dish_3, Dish_4, Dish_5, Dish_6, Dish_8]
+  dish_pointings:
+  - [0, 0, 1]
+  - [0, 0, 1]
+  - [0, 0, 1]
+  - [0, 0, 1]
+  - [0, 0, 1]
+  - [0, 0, 1]
+  - [0, 0, 1]
+  - [0, 0, 1]
+  dish_polarizations:
+  - [0, 0, 1]
+  - [0, 0, 1]
+  - [0, 0, 1]
+  - [0, 0, 1]
+  - [0, 0, 1]
+  - [0, 0, 1]
+  - [0, 0, 1]
+  - [0, 0, 1]
+  n_channels: 16
+  n_dishes: 8
+
+#CORRELATOR PARAMETERS AND VARIABLES USED:
+corr_params:
+  dimensions: [31744, 1024, 16]
+  fstep: -0.390625
+  tstep: 0.04194304
+
+#SOURCE PULSING PARAMETERS (microsec):
+pulse_params:
+  pulse_dutycycle: 200000.0
+  pulse_period: 400000.0
+  t_delta_pulse: -0.2136631146346346
+
+#BEST-FIT DRONE TIMESTAMP TIMING OFFSET (seconds):
+timing_params:
+  t_delta_dji: -1.32000000000003

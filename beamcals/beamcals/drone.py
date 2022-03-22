@@ -64,7 +64,7 @@ class Drone_Data:
         ## Assign Drone RTK Data to class variables:
         if "_processed" in self.FLYTAG:
             print("Initializing drone data via processed_csv routine: {}".format(self.FLYTAG))
-            print(" --> Skipping rows {} to {} to eliminate NAN values".format(skip_rows[0],skip_rows[-1]))
+            print("  --> Skipping rows {} to {} to eliminate NAN values".format(skip_rows[0],skip_rows[-1]))
             ## Load data columns from processed files:
             self.latitude=np.array(drone_data.Lat)
             self.longitude=np.array(drone_data.Lon)
@@ -82,28 +82,28 @@ class Drone_Data:
             self.t_arr_datetime=np.array(drone_data.assign(UTC=pandas.to_datetime(drone_data.UTC)).UTC)
         else:
             print("Initializing drone data via datcon_csv routine: {}".format(self.FLYTAG))
-            print(" --> Skipping rows {} to {} to eliminate NAN values".format(skip_rows[0],skip_rows[-1]))
+            print("  --> Skipping rows {} to {} to eliminate NAN values".format(skip_rows[0],skip_rows[-1]))
             ## Load data from full datcon files:
             try:
                 ## begin by trying to load RTK data if available:
-                print(" --> Attempting to load position data from RTK")
+                print("  --> Attempting to load position data from RTK")
                 self.latitude=np.array(drone_data["RTKdata:Lat_P"])
                 self.longitude=np.array(drone_data["RTKdata:Lon_P"])
                 self.hmsl=np.array(drone_data["RTKdata:Hmsl_P"])
                 nandtestsum=len(drone_data["RTKdata:Lat_P"][~np.isnan(drone_data["RTKdata:Lat_P"])])
-                print(" ----> RTK data contains {}/{} non-nan values".format(nandtestsum,len(drone_data["RTKdata:Lat_P"])))
+                print("    --> RTK data contains {}/{} non-nan values".format(nandtestsum,len(drone_data["RTKdata:Lat_P"])))
                 if nandtestsum>0:
                     pass
                 if nandtestsum==0:
-                    print(" ----> RTK Data not usable for this data file...")
-                    print(" --> Loading position data from GPS(0) instead:")
+                    print("    --> RTK Data not usable for this data file...")
+                    print("  --> Loading position data from GPS(0) instead:")
                     self.latitude=np.array(drone_data["GPS(0):Lat"])
                     self.longitude=np.array(drone_data["GPS(0):Long"])
                     self.hmsl=np.array(drone_data["GPS(0):heightMSL"])
             except KeyError:
                 ## If RTK data is not present, default to GPS(0) data:
-                print(" ----> RTK Data not found for this data file...")
-                print(" --> Loading position data from GPS(0) instead:")
+                print("    --> RTK Data not found for this data file...")
+                print("  --> Loading position data from GPS(0) instead:")
                 self.latitude=np.array(drone_data["GPS(0):Lat"])
                 self.longitude=np.array(drone_data["GPS(0):Long"])
                 self.hmsl=np.array(drone_data["GPS(0):heightMSL"])
@@ -117,7 +117,7 @@ class Drone_Data:
             self.t_arr_datetime=np.array(tu.interp_time(drone_data)["UTC"],dtype='object')
             self.altitude=self.hmsl-self.origin[2]
         ## Define coordinate systems we will eventually want to use:
-        print(" --> generating llh, geocentric cartesian, local cartesian, and local spherical coordinates.")
+        print("  --> generating llh, geocentric cartesian, local cartesian, and local spherical coordinates.")
         self.coords_llh=np.NAN*np.ones((self.t_index.shape[0],3))     ## Lat,Lon,hmsl from drone/RTK
         self.coords_xyz_GC=np.NAN*np.ones((self.t_index.shape[0],3))  ## x,y,z in meters in geocentric cartesian
         self.coords_xyz_LC=np.NAN*np.ones((self.t_index.shape[0],3))  ## x,y,z cartesian wrt a chosen origin (x=E,y=N,z=up)
@@ -128,7 +128,7 @@ class Drone_Data:
                 ## Create LatLon point for each recorded drone position:
                 p_t=pygeodesy.ellipsoidalNvector.LatLon(self.latitude[i],lon=self.longitude[i],height=self.hmsl[i])
             except RangeError:
-                print("     --> RangeError for index{}".format(i))
+                print("    --> RangeError for index{}".format(i))
             ## Assign llh, xyz, xyz_prime, rpt_prime coordinates, pointwise:
             self.coords_llh[i]=p_t.to3llh()
             self.coords_xyz_GC[i]=p_t.to3xyz()
@@ -139,7 +139,7 @@ class Drone_Data:
                 phi_prime=phi_prime+(2.0*np.pi)
             theta_prime=np.arccos(self.coords_xyz_LC[i,2]/r_prime)
             self.coords_rpt[i]=[r_prime,phi_prime,theta_prime]
-        print(" --> generating dish and receiver line of sight coordinates.")
+        print("  --> generating dish and receiver line of sight coordinates.")
         ## Calculate per-dish polar coordinates for drone/receiver in each other's beams as fxn of time:
         self.rpt_r_per_dish=np.zeros((len(self.dish_keystrings),len(self.t_index),3)) # drone posn wrt receiver
         self.rpt_t_per_dish=np.zeros((len(self.dish_keystrings),len(self.t_index),3)) # receiver posn wrt drone
