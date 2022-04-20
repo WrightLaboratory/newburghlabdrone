@@ -106,9 +106,9 @@ class Corr_Data:
                         vis[:,:,ii]/=(self.gain[:,ii]*self.gain[:,ii])[np.newaxis,:]
                 else:
                     if use_ctime==False:
-                        tm=np.array(fd['index_map']['time']['irigb_time']) # time axis
+                        tm=np.array(fd_n['index_map']['time']['irigb_time']) # time axis
                     if use_ctime==True:
-                        tm=np.array(fd['index_map']['time']['ctime']) # time axis
+                        tm=np.array(fd_n['index_map']['time']['ctime']) # time axis
                     freq=np.array([i[0] for i in fd_n['index_map']['freq'][flb:fub]]) # frequency axis
                     prod=fd_n['index_map']['prod'][:] # product axis
                     ## gain calibrate visibilities:
@@ -126,5 +126,8 @@ class Corr_Data:
         self.V=self.V.reshape((len(Data_File_Index)*vis.shape[0],vis.shape[1],self.n_channels))
         self.t=self.t.reshape(len(Data_File_Index)*vis.shape[0])
         self.sat=self.sat.reshape((len(Data_File_Index)*vis.shape[0],vis.shape[1],self.n_channels))
-        self.t_arr_datetime=np.array([datetime.datetime.fromtimestamp(1e-9*tt,pytz.timezone('America/Montreal')).astimezone(pytz.utc) for tt in self.t])
+        if use_ctime==False:
+            self.t_arr_datetime=np.array([datetime.datetime.fromtimestamp(1e-9*tt,pytz.timezone('America/Montreal')).astimezone(pytz.utc) for tt in self.t])
+        if use_ctime==True:
+            self.t_arr_datetime=np.array([datetime.datetime.fromtimestamp(tt,pytz.timezone('America/Montreal')).astimezone(pytz.utc) for tt in self.t])
         self.t_index=np.arange(len(self.t_arr_datetime))
