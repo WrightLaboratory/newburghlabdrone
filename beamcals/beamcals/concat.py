@@ -456,7 +456,7 @@ class CONCAT:
         inputdrone.t_arr_datetime=origtaxis
         if self.traceback==True:
             print('  --> Variable synchronation successful, generating output plots:')
-            pu.Synchronization_Verification_Plots(inputconcat=self,chans=np.arange(0,2),find=900,coordbounds=FMB_coordbounds,ampbound=FMB_ampbound)
+            pu.Synchronization_Verification_Plots(inputconcat=self,chans=np.arange(0,2),find=freqs[-1],coordbounds=FMB_coordbounds,ampbound=FMB_ampbound)
             if self.save_traceback==True:
                 print('  --> Saving output plot.')
                 savefig(self.Output_Directory+self.Output_Prefix+"_Synchronization_Verification.png")
