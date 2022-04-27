@@ -28,7 +28,7 @@ import datetime
 import pytz
 
 class Corr_Data:
-    def __init__(self,Data_Directory,Gain_Directory,site_class,Data_File_Index=None,Load_Gains=True,Fix_Gains=False,Apply_Gains=True,Gain_Params=[1.0,24.0],fbounds=[0,1024]):
+    def __init__(self,Data_Directory,Gain_Directory,site_class,Data_File_Index=None,Load_Gains=True,Fix_Gains=False,Apply_Gains=True,Gain_Params=[1.0,24.0],fbounds=[0,1024],use_ctime=False):
         ## Get data files using os instead of git:
         self.Data_Directory=Data_Directory
         self.Gain_Directory=Gain_Directory
@@ -48,7 +48,10 @@ class Corr_Data:
             self.prod = fd['prod'][:]   
             self.n_channels=len(self.prod)
         else: 
-            tm=np.array(fd['index_map']['time']['irigb_time']) # time axis
+            if use_ctime==False:
+                tm=np.array(fd['index_map']['time']['irigb_time']) # time axis
+            if use_ctime==True:
+                tm=np.array(fd['index_map']['time']['ctime']) # time axis
             self.freq=np.array([i[0] for i in fd['index_map']['freq'][flb:fub]]) # frequency axis
             self.prod=fd['index_map']['prod'][:] # product axis
             self.n_channels=int(fd['index_map']['prod'][:][-1][0]+1)
@@ -102,13 +105,15 @@ class Corr_Data:
                     for ii in range(len(prod)):
                         vis[:,:,ii]/=(self.gain[:,ii]*self.gain[:,ii])[np.newaxis,:]
                 else:
-                    tm=np.array(fd_n['index_map']['time']['irigb_time']) # time axis
+                    if use_ctime==False:
+                        tm=np.array(fd_n['index_map']['time']['irigb_time']) # time axis
+                    if use_ctime==True:
+                        tm=np.array(fd_n['index_map']['time']['ctime']) # time axis
                     freq=np.array([i[0] for i in fd_n['index_map']['freq'][flb:fub]]) # frequency axis
                     prod=fd_n['index_map']['prod'][:] # product axis
                     ## gain calibrate visibilities:
                     for ii,pp in enumerate(prod):
                         vis[:,:,ii]/=(self.gain[:,pp[0]]*self.gain[:,pp[1]])[np.newaxis,:]
-
                 for j,k in enumerate(self.automap):
                     self.V[i,:,:,j]=vis[:,:,k].real
                     self.sat[i,:,:,j]=fd_n['sat'][:,flb:fub,k].real
@@ -121,5 +126,8 @@ class Corr_Data:
         self.V=self.V.reshape((len(Data_File_Index)*vis.shape[0],vis.shape[1],self.n_channels))
         self.t=self.t.reshape(len(Data_File_Index)*vis.shape[0])
         self.sat=self.sat.reshape((len(Data_File_Index)*vis.shape[0],vis.shape[1],self.n_channels))
-        self.t_arr_datetime=np.array([datetime.datetime.fromtimestamp(1e-9*tt,pytz.timezone('America/Montreal')).astimezone(pytz.utc) for tt in self.t])
+        if use_ctime==False:
+            self.t_arr_datetime=np.array([datetime.datetime.fromtimestamp(1e-9*tt,pytz.timezone('America/Montreal')).astimezone(pytz.utc) for tt in self.t])
+        if use_ctime==True:
+            self.t_arr_datetime=np.array([datetime.datetime.fromtimestamp(tt,pytz.timezone('America/Montreal')).astimezone(pytz.utc) for tt in self.t])
         self.t_index=np.arange(len(self.t_arr_datetime))
