@@ -132,6 +132,7 @@ class CONCAT:
         self.n_channels=CORRDATCLASS.n_channels
         self.chmap=CORRDATCLASS.chmap
         self.automap=CORRDATCLASS.automap
+        self.crossmap=CORRDATCLASS.crossmap
         self.origin=DRONEDATCLASS.origin
         self.prime_origin=DRONEDATCLASS.prime_origin
         self.dish_keystrings=DRONEDATCLASS.dish_keystrings
@@ -144,6 +145,7 @@ class CONCAT:
         self.t_index=CORRDATCLASS.t_index
         self.t_arr_datetime=CORRDATCLASS.t_arr_datetime
         self.V=CORRDATCLASS.V
+        self.V_cross=CORRDATCLASS.V_cross
         ## Define lb and ub t_index corresponding to drone data start/stop times:
         drone_t_min=DRONEDATCLASS.t_arr_datetime[0]
         drone_t_max=DRONEDATCLASS.t_arr_datetime[-1]
@@ -468,7 +470,7 @@ class CONCAT:
         
     def Export_yaml(self,):
         ## Create the file on disk at the specified path and write an initialization comment:
-        tmpcorrdir=self.Data_Directory.split("_yale")[0].split("TONE_ACQ/")[1]
+        tmpcorrdir=(self.Data_Directory.split("Z_")[0]+'Z').split("/")[-1]
         tmpdronedir=self.FLYTAG.split('.')[0]
         tmpconfigpath=self.Config_Directory+'config_{}_{}.yaml'.format(tmpdronedir,tmpcorrdir)
         if self.traceback==True:

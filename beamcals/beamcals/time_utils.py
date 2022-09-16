@@ -17,10 +17,15 @@ import pandas
 
 ## Annie's function for fixing the time axis:
     # (9/28/2021) function for adding sub-second accuracy to DJI timestamps
+    # (8/24/2022) bugfix for new datcon changing 'gpsUsed' to 'osd_data:gpsUsed' and 'offsetTime' to 'Clock:offsetTime'
     # now detects and eliminates >1s errors
 def interp_time(df_in):
     # find where the GPS turns on
-    gps_idx = df_in[df_in.gpsUsed == True].index[0]
+    if 'gpsUsed' in df_in.columns:
+        gps_idx = df_in[df_in.gpsUsed == True].index[0]
+    ## WT:20220824 bugfix loop:
+    elif 'osd_data:gpsUsed' in df_in.columns:
+        gps_idx = df_in[df_in['osd_data:gpsUsed'] == True].index[0]
     # interpolate the time and see if it works out!
     while (gps_idx < len(df_in)):
         # look for where the datetimestamp ticks
@@ -30,7 +35,10 @@ def interp_time(df_in):
             gps_idx = gps_idx + 1
         # use this reference timestamp to convert the offsetTime column into proper datetimes
         start_dt = pandas.to_datetime(df_in["GPS:dateTimeStamp"][gps_idx])
-        offsets = np.array(df_in["offsetTime"]-df_in["offsetTime"][gps_idx])
+        if 'offsetTime' in df_in.columns:
+            offsets = np.array(df_in["offsetTime"]-df_in["offsetTime"][gps_idx])
+        elif 'Clock:offsetTime' in df_in.columns:
+            offsets = np.array(df_in["Clock:offsetTime"]-df_in["Clock:offsetTime"][gps_idx])
         offsets = pandas.to_timedelta(offsets, unit='s')
         timestamps = start_dt + offsets
         # put them in the dataframe

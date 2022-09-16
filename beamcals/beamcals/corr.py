@@ -28,7 +28,7 @@ import datetime
 import pytz
 
 class Corr_Data:
-    def __init__(self,Data_Directory,Gain_Directory,site_class,Data_File_Index=None,Load_Gains=True,Fix_Gains=False,Apply_Gains=True,Gain_Params=[1.0,24.0],fbounds=[0,1024],use_ctime=False):
+    def __init__(self,Data_Directory,Gain_Directory,site_class,Data_File_Index=None,Load_Gains=True,Fix_Gains=False,Apply_Gains=True,Gain_Params=[1.0,24.0],fbounds=[0,1024],use_ctime=False,crossmap=[1]):
         ## Get data files using os instead of git:
         self.Data_Directory=Data_Directory
         self.Gain_Directory=Gain_Directory
@@ -58,6 +58,7 @@ class Corr_Data:
             self.n_dishes=int(self.n_channels/2)
         self.chmap=np.array(site_class.chmap[:self.n_channels]).astype(int)
         self.automap=np.zeros(self.n_channels).astype(int)
+        self.crossmap=crossmap
         prodmat=np.array([element for tupl in self.prod for element in tupl]).reshape(len(self.prod),2)
         for i,j in enumerate(self.chmap):
             self.automap[i]=np.intersect1d(np.where(prodmat[:,0]==j),np.where(prodmat[:,1]==j))
@@ -67,6 +68,7 @@ class Corr_Data:
         self.V=np.zeros((len(Data_File_Index),vis.shape[0],vis.shape[1],self.n_channels))
         self.t=np.zeros((len(Data_File_Index),vis.shape[0]))
         self.sat=np.zeros((len(Data_File_Index),vis.shape[0],vis.shape[1],self.n_channels))
+        self.V_cross=np.zeros((len(Data_File_Index),vis.shape[0],vis.shape[1],len(self.crossmap))).astype(complex)
         # Get gain file (for all data files) if it exists...
         if Load_Gains==True:
             self.gainfile=os.listdir(self.Gain_Directory)[0]
@@ -114,9 +116,13 @@ class Corr_Data:
                     ## gain calibrate visibilities:
                     for ii,pp in enumerate(prod):
                         vis[:,:,ii]/=(self.gain[:,pp[0]]*self.gain[:,pp[1]])[np.newaxis,:]
+                ## Populate the automap array indices into V:
                 for j,k in enumerate(self.automap):
                     self.V[i,:,:,j]=vis[:,:,k].real
                     self.sat[i,:,:,j]=fd_n['sat'][:,flb:fub,k].real
+                ## Populate the crossmap array indices into V_cross:
+                for j,k in enumerate(self.crossmap):
+                    self.V_cross[i,:,:,j]=vis[:,:,k]             
                 self.t[i,:]=tm
                 fd.close()
             except OSError:
@@ -124,6 +130,7 @@ class Corr_Data:
         print("\n  --> Finished. Reshaping arrays.")
         ## reshape these arrays
         self.V=self.V.reshape((len(Data_File_Index)*vis.shape[0],vis.shape[1],self.n_channels))
+        self.V_cross=self.V_cross.reshape((len(Data_File_Index)*vis.shape[0],vis.shape[1],len(self.crossmap)))
         self.t=self.t.reshape(len(Data_File_Index)*vis.shape[0])
         self.sat=self.sat.reshape((len(Data_File_Index)*vis.shape[0],vis.shape[1],self.n_channels))
         if use_ctime==False:
