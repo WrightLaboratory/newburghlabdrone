@@ -42,11 +42,20 @@ class Corr_Data:
         fub=fbounds[1]
         vis=fd['vis'][:,flb:fub,:] ## This is the visibility matrix (the data)
         ##distinguish bw processed and unprocessed files (EK)
-        if 'processed' in Data_Directory: 
+        if 'processed' in Data_Directory and 'new' not in Data_Directory: 
             tm = fd['tm']
             self.freq = fd['freq'][flb:fub]
             self.prod = fd['prod'][:]   
             self.n_channels=len(self.prod)
+        if 'processed_new' in Data_Directory: 
+            if use_ctime==False:
+                tm=np.array(fd['tm']['irigb_time']) # time axis
+            if use_ctime==True:
+                tm=np.array(fd['tm']['ctime']) # time axis
+            self.freq = fd['freq'][flb:fub]
+            self.prod = fd['prod'][:]   
+            self.n_channels=len(self.prod)
+            self.n_dishes=int(self.n_channels/2)
         else: 
             if use_ctime==False:
                 tm=np.array(fd['index_map']['time']['irigb_time']) # time axis
@@ -100,8 +109,17 @@ class Corr_Data:
                 fd_n=h5py.File(self.Data_Directory+self.filenames[i], 'r')
                 vis=fd_n['vis'][:,flb:fub,:] # Visibility matrix
                 ##distinguish bw processed and unprocessed files
-                if 'processed' in Data_Directory:
+                if 'processed' in Data_Directory and 'new' not in Data_Directory:
                     tm=fd_n['tm'][:] # time axis
+                    freq=fd_n['freq'][flb:fub] # frequency axis
+                    prod=fd_n['prod'][:] # product axis
+                    for ii in range(len(prod)):
+                        vis[:,:,ii]/=(self.gain[:,ii]*self.gain[:,ii])[np.newaxis,:]
+                if 'processed_new' in Data_Directory: 
+                    if use_ctime==False:
+                        tm=np.array(fd_n['tm']['irigb_time']) # time axis
+                    if use_ctime==True:
+                        tm=np.array(fd_n['tm']['ctime']) # time axis
                     freq=fd_n['freq'][flb:fub] # frequency axis
                     prod=fd_n['prod'][:] # product axis
                     for ii in range(len(prod)):
