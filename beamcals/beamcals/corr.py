@@ -42,11 +42,20 @@ class Corr_Data:
         fub=fbounds[1]
         vis=fd['vis'][:,flb:fub,:] ## This is the visibility matrix (the data)
         ##distinguish bw processed and unprocessed files (EK)
-        if 'processed' in Data_Directory: 
+        if 'processed' in Data_Directory and 'new' not in Data_Directory: 
             tm = fd['tm']
             self.freq = fd['freq'][flb:fub]
             self.prod = fd['prod'][:]   
             self.n_channels=len(self.prod)
+        if 'processed_new' in Data_Directory: 
+            if use_ctime==False:
+                tm=np.array(fd['tm']['irigb_time']) # time axis
+            if use_ctime==True:
+                tm=np.array(fd['tm']['ctime']) # time axis
+            self.freq = fd['freq'][flb:fub]
+            self.prod = fd['prod'][:]   
+            self.n_channels=len(self.prod)
+            self.n_dishes=int(self.n_channels/2)
         else: 
             if use_ctime==False:
                 tm=np.array(fd['index_map']['time']['irigb_time']) # time axis
@@ -98,8 +107,17 @@ class Corr_Data:
                 fd_n=h5py.File(self.Data_Directory+self.filenames[i], 'r')
                 vis=fd_n['vis'][:,flb:fub,:] # Visibility matrix
                 ##distinguish bw processed and unprocessed files
-                if 'processed' in Data_Directory:
+                if 'processed' in Data_Directory and 'new' not in Data_Directory:
                     tm=fd_n['tm'][:] # time axis
+                    freq=fd_n['freq'][flb:fub] # frequency axis
+                    prod=fd_n['prod'][:] # product axis
+                    for ii in range(len(prod)):
+                        vis[:,:,ii]/=(self.gain[:,ii]*self.gain[:,ii])[np.newaxis,:]
+                if 'processed_new' in Data_Directory: 
+                    if use_ctime==False:
+                        tm=np.array(fd_n['tm']['irigb_time']) # time axis
+                    if use_ctime==True:
+                        tm=np.array(fd_n['tm']['ctime']) # time axis
                     freq=fd_n['freq'][flb:fub] # frequency axis
                     prod=fd_n['prod'][:] # product axis
                     for ii in range(len(prod)):
@@ -116,7 +134,8 @@ class Corr_Data:
                         vis[:,:,ii]/=(self.gain[:,pp[0]]*self.gain[:,pp[1]])[np.newaxis,:]
                 for j,k in enumerate(self.automap):
                     self.V[i,:,:,j]=vis[:,:,k].real
-                    self.sat[i,:,:,j]=fd_n['sat'][:,flb:fub,k].real
+                    try: self.sat[i,:,:,j]=fd_n['sat'][:,flb:fub,k].real
+                    except: pass 
                 self.t[i,:]=tm
                 fd.close()
             except OSError:
@@ -125,7 +144,8 @@ class Corr_Data:
         ## reshape these arrays
         self.V=self.V.reshape((len(Data_File_Index)*vis.shape[0],vis.shape[1],self.n_channels))
         self.t=self.t.reshape(len(Data_File_Index)*vis.shape[0])
-        self.sat=self.sat.reshape((len(Data_File_Index)*vis.shape[0],vis.shape[1],self.n_channels))
+        try: self.sat=self.sat.reshape((len(Data_File_Index)*vis.shape[0],vis.shape[1],self.n_channels))
+        except: pass
         if use_ctime==False:
             self.t_arr_datetime=np.array([datetime.datetime.fromtimestamp(1e-9*tt,pytz.timezone('America/Montreal')).astimezone(pytz.utc) for tt in self.t])
         if use_ctime==True:
