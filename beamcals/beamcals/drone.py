@@ -45,7 +45,7 @@ import beamcals.geometry_utils as gu
 import beamcals.time_utils as tu
 
 class Drone_Data:
-    def __init__(self,Drone_Directory,FLYTAG,site_class,skip_rows=np.arange(1,500).tolist()):
+    def __init__(self,Drone_Directory,FLYTAG,site_class,skip_rows=np.arange(1,500).tolist(),ignore_rtk=False):
         self.FLYTAG=FLYTAG
         self.Drone_Directory=Drone_Directory
         ## Import variables from site-specific site_class object:
@@ -62,6 +62,7 @@ class Drone_Data:
         ## Read Drone RTK Data
         drone_data=pandas.read_csv(self.Drone_Directory+self.FLYTAG,skiprows=skip_rows,low_memory=False)
         ## Assign Drone RTK Data to class variables:
+        self.ignore_rtk=ignore_rtk
         if "_processed" in self.FLYTAG:
             print("Initializing drone data via processed_csv routine: {}".format(self.FLYTAG))
             print("  --> Skipping rows {} to {} to eliminate NAN values".format(skip_rows[0],skip_rows[-1]))
@@ -84,34 +85,81 @@ class Drone_Data:
             print("Initializing drone data via datcon_csv routine: {}".format(self.FLYTAG))
             print("  --> Skipping rows {} to {} to eliminate NAN values".format(skip_rows[0],skip_rows[-1]))
             ## Load data from full datcon files:
-            try:
-                ## begin by trying to load RTK data if available:
-                print("  --> Attempting to load position data from RTK")
-                self.latitude=np.array(drone_data["RTKdata:Lat_P"])
-                self.longitude=np.array(drone_data["RTKdata:Lon_P"])
-                self.hmsl=np.array(drone_data["RTKdata:Hmsl_P"])
-                nandtestsum=len(drone_data["RTKdata:Lat_P"][~np.isnan(drone_data["RTKdata:Lat_P"])])
-                print("    --> RTK data contains {}/{} non-nan values".format(nandtestsum,len(drone_data["RTKdata:Lat_P"])))
-                if nandtestsum>0:
-                    pass
-                if nandtestsum==0:
-                    print("    --> RTK Data not usable for this data file...")
+            if self.ignore_rtk==False:
+                try:
+                    ## begin by trying to load RTK data if available:
+                    print("  --> Attempting to load position data from RTK")
+                    self.latitude=np.array(drone_data["RTKdata:Lat_P"])
+                    self.longitude=np.array(drone_data["RTKdata:Lon_P"])
+                    self.hmsl=np.array(drone_data["RTKdata:Hmsl_P"])
+                    nandtestsum=len(drone_data["RTKdata:Lat_P"][~np.isnan(drone_data["RTKdata:Lat_P"])])
+                    print("    --> RTK data contains {}/{} non-nan values".format(nandtestsum,len(drone_data["RTKdata:Lat_P"])))
+                    if nandtestsum>0:
+                        pass
+                    if nandtestsum==0:
+                        print("    --> RTK Data not usable for this data file...")
+                        print("  --> Loading position data from GPS(0) instead:")
+                        if "GPS(0):Lat" in drone_data.columns:
+                            self.latitude=np.array(drone_data["GPS(0):Lat"])
+                        elif "GPS:Lat" in drone_data.columns:
+                            self.latitude=np.array(drone_data["GPS:Lat"])
+                        if "GPS(0):Long" in drone_data.columns:
+                            self.longitude=np.array(drone_data["GPS(0):Long"])
+                        elif "GPS:Long" in drone_data.columns:
+                            self.longitude=np.array(drone_data["GPS:Long"])                        
+                        if "GPS(0):heightMSL" in drone_data.columns:
+                            self.hmsl=np.array(drone_data["GPS(0):heightMSL"])
+                        elif "GPS:heightMSL" in drone_data.columns:
+                            self.hmsl=np.array(drone_data["GPS:heightMSL"])                        
+                except KeyError:
+                    ## If RTK data is not present, default to GPS(0) data:
+                    print("    --> RTK Data not found for this data file...")
                     print("  --> Loading position data from GPS(0) instead:")
-                    self.latitude=np.array(drone_data["GPS(0):Lat"])
-                    self.longitude=np.array(drone_data["GPS(0):Long"])
-                    self.hmsl=np.array(drone_data["GPS(0):heightMSL"])
-            except KeyError:
-                ## If RTK data is not present, default to GPS(0) data:
-                print("    --> RTK Data not found for this data file...")
+                    if "GPS(0):Lat" in drone_data.columns:
+                        self.latitude=np.array(drone_data["GPS(0):Lat"])
+                    elif "GPS:Lat" in drone_data.columns:
+                        self.latitude=np.array(drone_data["GPS:Lat"])
+                    if "GPS(0):Long" in drone_data.columns:
+                        self.longitude=np.array(drone_data["GPS(0):Long"])
+                    elif "GPS:Long" in drone_data.columns:
+                        self.longitude=np.array(drone_data["GPS:Long"])                        
+                    if "GPS(0):heightMSL" in drone_data.columns:
+                        self.hmsl=np.array(drone_data["GPS(0):heightMSL"])
+                    elif "GPS:heightMSL" in drone_data.columns:
+                        self.hmsl=np.array(drone_data["GPS:heightMSL"])
+            if self.ignore_rtk==True:
+                print("  --> RTK Data is being ignored due to input args...")
                 print("  --> Loading position data from GPS(0) instead:")
-                self.latitude=np.array(drone_data["GPS(0):Lat"])
-                self.longitude=np.array(drone_data["GPS(0):Long"])
-                self.hmsl=np.array(drone_data["GPS(0):heightMSL"])
-            ## Load columns that don't depend on the RTK data...
-            self.pitch=np.array(drone_data["IMU_ATTI(0):pitch"])
-            self.roll=np.array(drone_data["IMU_ATTI(0):roll"])
-            self.yaw=np.array(drone_data["IMU_ATTI(0):yaw360"])
-            self.velocity=np.array(drone_data["IMU_ATTI(0):velComposite"])
+                if "GPS(0):Lat" in drone_data.columns:
+                    self.latitude=np.array(drone_data["GPS(0):Lat"])
+                elif "GPS:Lat" in drone_data.columns:
+                    self.latitude=np.array(drone_data["GPS:Lat"])
+                if "GPS(0):Long" in drone_data.columns:
+                    self.longitude=np.array(drone_data["GPS(0):Long"])
+                elif "GPS:Long" in drone_data.columns:
+                    self.longitude=np.array(drone_data["GPS:Long"])                        
+                if "GPS(0):heightMSL" in drone_data.columns:
+                    self.hmsl=np.array(drone_data["GPS(0):heightMSL"])
+                elif "GPS:heightMSL" in drone_data.columns:
+                    self.hmsl=np.array(drone_data["GPS:heightMSL"])
+            ## Load columns that don't depend on the RTK data... 
+            ## 8/24 patch: New version of datcon changes column headers to include ':C'
+            if "IMU_ATTI(0):pitch" in drone_data.columns:
+                self.pitch=np.array(drone_data["IMU_ATTI(0):pitch"])
+            elif "IMU_ATTI(0):pitch:C" in drone_data.columns:
+                self.pitch=np.array(drone_data["IMU_ATTI(0):pitch:C"])
+            if "IMU_ATTI(0):roll" in drone_data.columns:
+                self.roll=np.array(drone_data["IMU_ATTI(0):roll"])
+            elif "IMU_ATTI(0):roll:C" in drone_data.columns:
+                self.roll=np.array(drone_data["IMU_ATTI(0):roll:C"])
+            if "IMU_ATTI(0):yaw360" in drone_data.columns:
+                self.yaw=np.array(drone_data["IMU_ATTI(0):yaw360"])
+            if "IMU_ATTI(0):yaw360:C" in drone_data.columns:
+                self.yaw=np.array(drone_data["IMU_ATTI(0):yaw360:C"])
+            if "IMU_ATTI(0):velComposite" in drone_data.columns:
+                self.velocity=np.array(drone_data["IMU_ATTI(0):velComposite"])
+            elif "IMU_ATTI(0):velComposite:C" in drone_data.columns:
+                self.velocity=np.array(drone_data["IMU_ATTI(0):velComposite:C"])
             self.t_arr_timestamp=np.array(drone_data["GPS:dateTimeStamp"])
             self.t_index=np.arange(len(self.t_arr_timestamp))
             self.t_arr_datetime=np.array(tu.interp_time(drone_data)["UTC"],dtype='object')
