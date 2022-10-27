@@ -303,18 +303,25 @@ class CONCAT:
             pass
         self.V_bg=np.zeros(self.V.shape)
         self.V_bgsub=np.zeros(self.V.shape)
+        if self.crossmap!=None:
+            self.V_cross_bg=np.zeros(self.V_cross.shape).astype(complex)
+            self.V_cross_bgsub=np.zeros(self.V_cross.shape).astype(complex)
         ## Loop over all indices and construct the V_bg array:
         for k,ind in enumerate(self.t_index):
             ## If ind is an off spectra, use this off spectra for the background:
             if k in self.inds_off:
-                #print(k,"poo")
                 self.V_bg[k,:,:]=self.V[k,:,:]
+                if self.crossmap!=None:
+                    self.V_cross_bg[k,:,:]=self.V_cross[k,:,:]
             ## If ind is an on spectra, create an off spectra by averaging the before/after off spectra:
             elif k in np.union1d(self.inds_on,self.inds_span):
                 t_window=np.intersect1d(np.arange(k-window_size,k+window_size),self.inds_off)
-                #print(k,t_window)
                 self.V_bg[k,:,:]=np.nanmean(self.V[t_window,:,:],axis=0)
+                if self.crossmap!=None:
+                    self.V_cross_bg[k,:,:]=np.nanmean(self.V_cross[t_window,:,:],axis=0)
         self.V_bgsub=self.V-self.V_bg
+        if self.crossmap!=None:
+            self.V_cross_bgsub=self.V_cross-self.V_cross_bg
         if self.traceback==True:
             print("  --> Background subtraction completed using window_size = {}".format(window_size))
         if self.traceback==False:

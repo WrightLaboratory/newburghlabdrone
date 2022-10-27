@@ -28,7 +28,7 @@ import datetime
 import pytz
 
 class Corr_Data:
-    def __init__(self,Data_Directory,Gain_Directory,site_class,Data_File_Index=None,Load_Gains=True,Fix_Gains=False,Apply_Gains=True,Gain_Params=[1.0,24.0],fbounds=[0,1024],use_ctime=False,crossmap=[1]):
+    def __init__(self,Data_Directory,Gain_Directory,site_class,Data_File_Index=None,Load_Gains=True,Fix_Gains=False,Apply_Gains=True,Gain_Params=[1.0,24.0],fbounds=[0,1024],use_ctime=False,crossmap=None):
         ## Get data files using os instead of git:
         self.Data_Directory=Data_Directory
         self.Gain_Directory=Gain_Directory
@@ -49,9 +49,9 @@ class Corr_Data:
             self.n_channels=len(self.prod)
         else: 
             if use_ctime==False:
-                tm=np.array(fd['index_map']['time']['irigb_time']) # time axis
+                self.t0=1e-9*fd['index_map']['time']['irigb_time'][0]
             if use_ctime==True:
-                tm=np.array(fd['index_map']['time']['ctime']) # time axis
+                self.t0=fd['index_map']['time']['ctime'][0]
             self.freq=np.array([i[0] for i in fd['index_map']['freq'][flb:fub]]) # frequency axis
             self.prod=fd['index_map']['prod'][:] # product axis
             self.n_channels=int(fd['index_map']['prod'][:][-1][0]+1)
@@ -107,10 +107,7 @@ class Corr_Data:
                     for ii in range(len(prod)):
                         vis[:,:,ii]/=(self.gain[:,ii]*self.gain[:,ii])[np.newaxis,:]
                 else:
-                    if use_ctime==False:
-                        tm=np.array(fd_n['index_map']['time']['irigb_time']) # time axis
-                    if use_ctime==True:
-                        tm=np.array(fd_n['index_map']['time']['ctime']) # time axis
+                    tm=(2.56e-6)*np.array(fd_n['index_map']['time']['fpga_count'])
                     freq=np.array([i[0] for i in fd_n['index_map']['freq'][flb:fub]]) # frequency axis
                     prod=fd_n['index_map']['prod'][:] # product axis
                     ## gain calibrate visibilities:
@@ -133,8 +130,7 @@ class Corr_Data:
         self.V_cross=self.V_cross.reshape((len(Data_File_Index)*vis.shape[0],vis.shape[1],len(self.crossmap)))
         self.t=self.t.reshape(len(Data_File_Index)*vis.shape[0])
         self.sat=self.sat.reshape((len(Data_File_Index)*vis.shape[0],vis.shape[1],self.n_channels))
-        if use_ctime==False:
-            self.t_arr_datetime=np.array([datetime.datetime.fromtimestamp(1e-9*tt,pytz.timezone('America/Montreal')).astimezone(pytz.utc) for tt in self.t])
-        if use_ctime==True:
-            self.t_arr_datetime=np.array([datetime.datetime.fromtimestamp(tt,pytz.timezone('America/Montreal')).astimezone(pytz.utc) for tt in self.t])
+        timedeltas=np.array([datetime.timedelta(seconds=x) for x in self.t])
+        dt0=datetime.datetime.fromtimestamp(self.t0,pytz.timezone('America/Montreal')).astimezone(pytz.utc)
+        self.t_arr_datetime=dt0+timedeltas
         self.t_index=np.arange(len(self.t_arr_datetime))
