@@ -35,7 +35,7 @@ import beamcals.time_utils as tu
 from beamcals import concat
 
 class CONCAT:
-    def __init__(self,CORRDATCLASS,DRONEDATCLASS,config_directory="/hirax/GBO_Analysis_Outputs/concat_config_files/",output_directory='/hirax/GBO_Analysis_Outputs/',load_yaml=True,traceback=True,save_traceback=True):
+    def __init__(self,CORRDATCLASS,DRONEDATCLASS,config_directory="/hirax/GBO_Analysis_Outputs/concat_config_files/",output_directory='/hirax/GBO_Analysis_Outputs/',load_yaml=True,traceback=True,save_traceback=True, t_drone_offset = 0):
         ## Decide whether or not we want a traceback for print statements/verification plots:
         self.traceback=traceback
         ## Decide whether or not we want to save traceback output plots:
@@ -155,6 +155,7 @@ class CONCAT:
         tsepoch=datetime.datetime.utcfromtimestamp(0).replace(tzinfo=pytz.UTC)
         ds_CORR=np.array([(np.datetime64(ts).astype(datetime.datetime).replace(tzinfo=pytz.UTC)-tsepoch).total_seconds() for ts in self.t_arr_datetime[CORR_t_ind_lb:CORR_t_ind_ub]])
         ds_drone=np.array([(np.datetime64(ts).astype(datetime.datetime).replace(tzinfo=pytz.UTC)-tsepoch).total_seconds() for ts in DRONEDATCLASS.t_arr_datetime])
+        ds_drone = ds_drone+t_drone_offset
         #ds_CORR=[(self.t_arr_datetime[n]-self.t_arr_datetime[CORR_t_ind_lb]).total_seconds() for n in self.t_index[CORR_t_ind_lb:CORR_t_ind_ub]]
         #ds_drone=[(DRONEDATCLASS.t_arr_datetime[m]-drone_t_min).total_seconds() for m in DRONEDATCLASS.t_index]
         if self.traceback==True:
