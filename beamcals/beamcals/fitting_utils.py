@@ -83,10 +83,12 @@ def Fit_Main_Beam(inputconcat,chans,freqs,coordbounds=[50.0,50.0,150.0],ampbound
                 ## initial guess and bounds:
                 pA=np.array([amp0,x00,y00,rad0,bg0])
                 pG=np.array([amp0,x00,xsig0,y00,ysig0,theta0,bg0])
+                bnds = ((-np.inf, -np.inf,0, -np.inf,0, -np.pi/4,-np.inf),
+                        (np.inf, np.inf,np.inf, np.inf,np.inf, np.pi/4,np.inf))
                 ## run the fits:
                 A_popt[i,j]=least_squares(Airy_2d_LC_opt,x0=pA,args=mb_input_data).x
                 A_PR[i,j]=pearsonr(mbV,Airy_2d_LC_func(A_popt[i,j,:],mbx,mby))[0]
-                G_popt[i,j]=least_squares(Gauss_2d_LC_opt,x0=pG,args=mb_input_data).x
+                G_popt[i,j]=least_squares(Gauss_2d_LC_opt,x0=pG,bounds=bnds,method='trf',args=mb_input_data).x
                 G_PR[i,j]=pearsonr(mbV,Gauss_2d_LC_func(G_popt[i,j,:],mbx,mby))[0]
             except ValueError:
                 A_popt[i,j,:]=np.NAN*np.zeros(5)
