@@ -294,7 +294,7 @@ def Plot_Beammap(concat_class,t_bounds=[0,-1],coord_args="LC",pulse_args=None,f_
                 cbar.set_label('Power [$ADU^2$]')
     tight_layout()
     
-def Synchronization_Verification_Plots(inputconcat,chans=np.arange(0,2),find=900,coordbounds=[50.0,50.0,150.0],ampbound=0.999):
+def Synchronization_Verification_Plots(inputconcat,chans=np.array([2,3]),find=900,coordbounds=[50.0,50.0,150.0],ampbound=0.999):
     ## Produce additional verification plots:
     ## Make figures for the best-fit time offset at a particular frequency:
     figure,[[ax1,ax2],[ax3,ax4],[ax5,ax6],[ax7,ax8],[ax9,ax10],[ax11,ax12]]=subplots(nrows=6,ncols=2,figsize=(16,40))

@@ -18,6 +18,7 @@ from matplotlib.colors import LogNorm
 from matplotlib.ticker import MultipleLocator
 import numpy as np
 import h5py
+import hdf5plugin
 ##From WT:
 import os
 import glob
@@ -41,6 +42,8 @@ class Corr_Data:
         flb=fbounds[0]
         fub=fbounds[1]
         vis=fd['vis'][:,flb:fub,:] ## This is the visibility matrix (the data)
+        if 'CHIME' in site_class.name:
+            vis=np.array(fd['vis']).transpose(2,0,1)[:,flb:fub,:]
         ##distinguish bw processed and unprocessed files (EK)
         if 'processed' in Data_Directory and 'new' not in Data_Directory: 
             tm = fd['tm']
@@ -63,7 +66,7 @@ class Corr_Data:
                 self.t0=fd['index_map']['time']['ctime'][0]
             self.freq=np.array([i[0] for i in fd['index_map']['freq'][flb:fub]]) # frequency axis
             self.prod=fd['index_map']['prod'][:] # product axis
-            self.n_channels=int(fd['index_map']['prod'][:][-1][0]+1)
+            self.n_channels=min(len(site_class.chmap),int(fd['index_map']['prod'][:][-1][0]+1))
             self.n_dishes=int(self.n_channels/2)
         self.chmap=np.array(site_class.chmap[:self.n_channels]).astype(int)
         self.automap=np.zeros(self.n_channels).astype(int)
@@ -108,6 +111,8 @@ class Corr_Data:
                 print("\r  --> Loading File: {}/{}".format(self.filenames[i],self.filenames[-1]),end="")
                 fd_n=h5py.File(self.Data_Directory+self.filenames[i], 'r')
                 vis=fd_n['vis'][:,flb:fub,:] # Visibility matrix
+                if 'CHIME' in site_class.name:
+                    vis=np.array(fd_n['vis']).transpose(2,0,1)[:,flb:fub,:]
                 ##distinguish bw processed and unprocessed files
                 if 'processed' in Data_Directory and 'new' not in Data_Directory:
                     tm=fd_n['tm'][:] # time axis
@@ -125,7 +130,12 @@ class Corr_Data:
                     for ii in range(len(prod)):
                         vis[:,:,ii]/=(self.gain[:,ii]*self.gain[:,ii])[np.newaxis,:]
                 else:
-                    tm=(2.56e-6)*np.array(fd_n['index_map']['time']['fpga_count'])
+                    if use_ctime==False:
+                        tm=np.array(fd_n['index_map']['time']['irigb_time']) # time axis
+                        if 'GBO' in site_class.name:
+                            tm=(2.56e-6)*np.array(fd_n['index_map']['time']['fpga_count']) #construct time from fpga_counts
+                    if use_ctime==True:
+                        tm=np.array(fd_n['index_map']['time']['ctime']) # time axis
                     freq=np.array([i[0] for i in fd_n['index_map']['freq'][flb:fub]]) # frequency axis
                     prod=fd_n['index_map']['prod'][:] # product axis
                     ## gain calibrate visibilities:
@@ -134,7 +144,10 @@ class Corr_Data:
                 ## Populate the automap array indices into V:
                 for j,k in enumerate(self.automap):
                     self.V[i,:,:,j]=vis[:,:,k].real
-                    self.sat[i,:,:,j]=fd_n['sat'][:,flb:fub,k].real
+                    try:
+                        self.sat[i,:,:,j]=fd_n['sat'][:,flb:fub,k].real
+                    except KeyError:
+                        pass
                 ## Populate the crossmap array indices into V_cross:
                 for j,k in enumerate(self.crossmap):
                     self.V_cross[i,:,:,j]=vis[:,:,k]             
@@ -148,7 +161,10 @@ class Corr_Data:
         self.V_cross=self.V_cross.reshape((len(Data_File_Index)*vis.shape[0],vis.shape[1],len(self.crossmap)))
         self.t=self.t.reshape(len(Data_File_Index)*vis.shape[0])
         self.sat=self.sat.reshape((len(Data_File_Index)*vis.shape[0],vis.shape[1],self.n_channels))
-        timedeltas=np.array([datetime.timedelta(seconds=x) for x in self.t])
-        dt0=datetime.datetime.fromtimestamp(self.t0,pytz.timezone('America/Montreal')).astimezone(pytz.utc)
-        self.t_arr_datetime=dt0+timedeltas
+        if 'GBO' in site_class.name:
+            timedeltas=np.array([datetime.timedelta(seconds=x) for x in self.t])
+            dt0=datetime.datetime.fromtimestamp(self.t0,pytz.timezone('America/Montreal')).astimezone(pytz.utc)
+            self.t_arr_datetime=dt0+timedeltas
+        if 'CHIME' in site_class.name:
+            self.t_arr_datetime=np.array([datetime.datetime.fromtimestamp(x,pytz.utc) for x in self.t])
         self.t_index=np.arange(len(self.t_arr_datetime))

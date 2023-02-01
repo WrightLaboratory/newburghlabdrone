@@ -7,3 +7,4 @@ pytz
 pygeodesy
 pandas
 h5py
+hdf5plugin

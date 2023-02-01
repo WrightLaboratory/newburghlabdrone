@@ -10,6 +10,7 @@ from matplotlib.colors import LogNorm
 from matplotlib.ticker import MultipleLocator
 import numpy as np
 import h5py
+import hdf5plugin
 import os
 import glob
 from matplotlib import colors
@@ -328,7 +329,7 @@ class CONCAT:
         if self.traceback==False:
             pass
         
-    def Synchronization_Function(self,inputcorr,inputdrone,coarse_params=[-10.0,10.0,0.2],fine_params=[-0.5,0.5,0.01],chans=np.arange(0,2),freqs=np.arange(100,1024,150),FMB_coordbounds=[50.0,50.0,150.0],FMB_ampbound=0.999):
+    def Synchronization_Function(self,inputcorr,inputdrone,coarse_params=[-10.0,10.0,0.2],fine_params=[-0.5,0.5,0.01],chans=np.array([2,3]),freqs=np.arange(100,1024,150),FMB_coordbounds=[50.0,50.0,150.0],FMB_ampbound=0.999):
         if self.traceback==True:
             print("Synchronizing data from correlator and drone:")
         if self.traceback==False:
@@ -466,7 +467,8 @@ class CONCAT:
         inputdrone.t_arr_datetime=origtaxis
         if self.traceback==True:
             print('  --> Variable synchronation successful, generating output plots:')
-            pu.Synchronization_Verification_Plots(inputconcat=self,chans=np.arange(0,2),find=freqs[-1],coordbounds=FMB_coordbounds,ampbound=FMB_ampbound)
+            channels=chans
+            pu.Synchronization_Verification_Plots(inputconcat=self,chans=channels,find=freqs[-1],coordbounds=FMB_coordbounds,ampbound=FMB_ampbound)
             if self.save_traceback==True:
                 print('  --> Saving output plot.')
                 savefig(self.Output_Directory+self.Output_Prefix+"_Synchronization_Verification.png")
