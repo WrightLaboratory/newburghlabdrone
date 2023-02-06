@@ -1,0 +1,8 @@
+
+## 2023-02-03
+
+Channel mapping for drone (at least in flights 533-535 in Aug 2021):
+
+Epols = [0,3,4,7,9,10,12,14] corresponding to dish [0,1,2,3,4,5,6,7]
+Npols = [1,2,5,6,8,11,13,15] corresponding to dish [0,1,2,3,4,5,6,7]
+(channel indexes 7, 12, 13 bad)
