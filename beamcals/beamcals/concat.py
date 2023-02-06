@@ -579,7 +579,7 @@ class CONCAT:
             print('Performing 2DGauss and Airy fits for [{}]chans x [{}]freqs:'.format(self.n_channels,len(freqs)))
         if self.traceback==False:
             pass
-        A_popt,A_PR,G_popt,G_PR=fu.Fit_Main_Beam(inputconcat=self,chans=self.chmap,freqs=freqs)
+        A_popt,A_PR,G_popt,G_PR=fu.Fit_Main_Beam(inputconcat=self,chans=range(self.n_channels),freqs=freqs)
         self.A_popt=A_popt
         self.A_PR=A_PR
         self.G_popt=G_popt
