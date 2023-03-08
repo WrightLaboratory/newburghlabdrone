@@ -342,10 +342,9 @@ def Synchronization_Verification_Plots(inputconcat,chans=np.array([2,3]),find=90
         ## 2dgauss params:
         xsig0=6.0
         ysig0=6.0
-        theta0=0.0
         ## initial guess and bounds:
         pA=np.array([amp0,x00,y00,rad0,bg0])
-        pG=np.array([amp0,x00,xsig0,y00,ysig0,theta0,bg0])
+        pG=np.array([amp0,x00,xsig0,y00,ysig0,bg0])
         ## run the fits:
         Apopt=least_squares(fu.Airy_2d_LC_opt,x0=pA,args=mb_input_data).x
         Gpopt=least_squares(fu.Gauss_2d_LC_opt,x0=pG,args=mb_input_data).x
@@ -433,3 +432,63 @@ def Synchronization_Verification_Plots(inputconcat,chans=np.array([2,3]),find=90
         ax.set_xlabel('Y $[m]$')
         ax.set_ylabel('Power [$ADU^2$]')
     tight_layout()
+
+
+
+################################################
+##                Other plotting              ##
+################################################
+
+
+def plot_MBG_fits(filelist,cmp='gnuplot2',fitdir='/hirax/GBO_Analysis_Outputs/main_beam_fits/'):
+    # This plots the npz files generated from Gaussian main beam fitting
+    #some setup
+    cm = get_cmap(cmp)
+    freqs = np.arange(800,400,-400/1024.)
+    
+    # make a plot per file:
+    print(len(filelist))
+    for file in filelist:
+        ## Make figure set: 6 parameters, plot vs freq with different markers dependent on pol/dish
+        fig, axs = subplots(nrows=6,ncols=1,sharex=True,figsize=(15,15)) 
+        ## Loop through fits and make the plot:
+        fits = np.load(fitdir+file)
+        N = len(fits['G_popt'][:,0,1])
+        chans = np.arange(N)
+        cs=[cm(1.*i/N) for i in range(N)]
+        for c,chan in enumerate(chans):
+            if chan%2==0: # assume its even (E pol)
+                mtype = ',' 
+                msize = 4
+            else: # assume its odd (N pol)
+                mtype='^' 
+                msize= 2
+            axs[0].set_title('Flight: '+file)   
+            axs[0].plot(freqs,fits['G_popt'][chan,:,1],marker=mtype,ms=msize,color=cs[chan],linestyle='None')
+            axs[0].set_ylim(-20,20)
+            axs[0].set_ylabel('X centroid')
+        
+            axs[1].plot(freqs,fits['G_popt'][chan,:,3],marker=mtype,ms=msize,color=cs[chan],linestyle='None')
+            axs[1].set_ylim(-20,20)
+            axs[1].set_ylabel('Y centroid')
+
+            axs[2].plot(freqs,fits['G_popt'][chan,:,2],marker=mtype,ms=msize,color=cs[chan],linestyle='None')
+            axs[2].set_ylim(0,20)
+            axs[2].set_ylabel('Xsig')
+        
+            axs[3].plot(freqs,fits['G_popt'][chan,:,4],marker=mtype,ms=msize,color=cs[chan],linestyle='None')
+            axs[3].set_ylim(0,20)
+            axs[3].set_ylabel('Ysig')
+
+            axs[4].plot(freqs,fits['G_popt'][chan,:,0],marker=mtype,ms=msize,color=cs[chan],linestyle='None')
+            axs[4].set_ylim(0,4E-7)
+            axs[4].set_ylabel('Amp')
+
+            axs[5].plot(freqs,np.degrees(fits['G_popt'][chan,:,5]),marker=mtype,ms=msize,color=cs[chan],
+                        label='chan '+str(chan),linestyle='None')
+            axs[5].set_ylim(-45,45)
+            axs[5].set_ylabel('Theta [deg]')
+            axs[5].legend(markerscale=3,ncol=8)
+            axs[5].set_xlabel('Frequency [MHz]')
+            
+    fig.show()
