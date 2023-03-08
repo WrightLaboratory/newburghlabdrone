@@ -117,25 +117,39 @@ def Plot_Gains_vs_Data(corr_class,tind=1):
 ##                 Drone_Data                 ##
 ################################################
 
-def Plot_Drone_Coordinates(drone_class,t_bounds=[0,-1]):
+def Plot_Drone_Coordinates(drone_class,coo='lat',t_bounds=[0,-1]):
     print('plotting drone coordinates for all time samples:')
     fig1,[[ax1,ax2,ax3],[ax4,ax5,ax6]]=subplots(nrows=2,ncols=3,figsize=(15,9))
     ## Plot p0 coordinate origin:
     ax1.plot(drone_class.origin[0],drone_class.origin[1],'ro')
     ax2.axhline(drone_class.origin[0],c='b')
     ax3.axhline(drone_class.origin[1],c='b')
-    ## Title each coordinate subplot:        
-    ax1.set_title('Lat vs Lon')
-    ax2.set_title('Lat vs Time')
-    ax3.set_title('Lon vs Time')
-    ax4.set_title('Velocity vs Time')
-    ax5.set_title('Altitude vs Time')
-    ax6.set_title('Yaw vs Time')
-    ## Specify arrays/vectors to plot in 1,3,4 coordinate subplot
-    xqtys=[drone_class.latitude,drone_class.t_index,drone_class.t_index,drone_class.t_index,drone_class.t_index,drone_class.t_index]
-    yqtys=[drone_class.longitude,drone_class.latitude,drone_class.longitude,drone_class.velocity,drone_class.altitude,drone_class.yaw]
-    xtags=['Latitude, [$deg$]','Drone Index','Drone Index','Drone Index','Drone Index','Drone Index']
-    ytags=['Longitude, [$deg$]','Latitude, [$deg$]','Longitude, [$deg$]','Velocity, [m/s]','Altitude, [$m$]','Yaw [$deg$]']
+
+    if coo=='lat':
+        ## Title each coordinate subplot:        
+        ax1.set_title('Lat vs Lon')
+        ax2.set_title('Lat vs Time')
+        ax3.set_title('Lon vs Time')
+        ax4.set_title('Velocity vs Time')
+        ax5.set_title('Altitude vs Time')
+        ax6.set_title('Yaw vs Time')
+        ## Specify arrays/vectors to plot in 1,3,4 coordinate subplot
+        xqtys=[drone_class.latitude,drone_class.t_index,drone_class.t_index,drone_class.t_index,drone_class.t_index,drone_class.t_index]
+        yqtys=[drone_class.longitude,drone_class.latitude,drone_class.longitude,drone_class.velocity,drone_class.altitude,drone_class.yaw]
+        xtags=['Latitude, [$deg$]','Drone Index','Drone Index','Drone Index','Drone Index','Drone Index']
+        ytags=['Longitude, [$deg$]','Latitude, [$deg$]','Longitude, [$deg$]','Velocity, [m/s]','Altitude, [$m$]','Yaw [$deg$]']
+    if coo=='xy': 
+        ax1.set_title('X vs Y')
+        ax2.set_title('X vs Time')
+        ax3.set_title('Y vs Time')
+        ax4.set_title('Velocity vs Time')
+        ax5.set_title('Altitude vs Time')
+        ax6.set_title('Yaw vs Time')
+        ## Specify arrays/vectors to plot in 1,3,4 coordinate subplot
+        xqtys=[drone_class.coords_xyz_LC[:,0],drone_class.t_index,drone_class.t_index,drone_class.t_index,drone_class.t_index,drone_class.t_index]
+        yqtys=[drone_class.coords_xyz_LC[:,1],drone_class.latitude,drone_class.longitude,drone_class.velocity,drone_class.altitude,drone_class.yaw]
+        xtags=['X, [$m$]','Drone Index','Drone Index','Drone Index','Drone Index','Drone Index']
+        ytags=['Y, [$m$]','X, [$m$]','Y, [$m$]','Velocity, [m/s]','Altitude, [$m$]','Yaw [$deg$]']
     print('overplotting drone coordinates for t_cut samples: ['+str(t_bounds[0])+':'+str(t_bounds[1])+']')
     for i,ax in enumerate([ax1,ax2,ax3,ax4,ax5,ax6]):
         ax.plot(np.nanmin(xqtys[i][t_bounds[0]:t_bounds[1]]),np.nanmin(yqtys[i][t_bounds[0]:t_bounds[1]]))
