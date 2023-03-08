@@ -100,7 +100,9 @@ class CONCAT:
             ## If the previous config file exists, we enter this loop to load parameters:
             if self.yaml_exists==True:
                 ymlfile=open(self.Config_Directory+'config_{}_{}.yaml'.format(tmpdronedir,tmpcorrdir))
-                documents=yaml.full_load(ymlfile)
+                #documents=yaml.full_load(ymlfile)
+                with open(ymlfile, 'r') as fff:
+                    documents = yaml.safe_load(fff)
                 ## Check to see if the variables exist for function: Extract_Source_Pulses
                 if 'pulse_params' in documents.keys():
                     self.pulse_period=np.float64(documents["pulse_params"]["pulse_period"])
@@ -366,7 +368,7 @@ class CONCAT:
                     pass
                 inputdrone.t_arr_datetime=origtaxis
                 ## Run fits:
-                result=fu.Fit_Main_Beam(tempconcat,chans,freqs,coordbounds=FMB_coordbounds,ampbound=FMB_ampbound)
+                result=fu.Fit_Main_Beam(tempconcat,chans,freqs,theta_solve=False,coordbounds=FMB_coordbounds,ampbound=FMB_ampbound)
                 AFit_f_params[i]=result[0]
                 APRarr[i]=result[1]
                 GFit_f_params[i]=result[2]
@@ -403,7 +405,7 @@ class CONCAT:
                     pass
                 inputdrone.t_arr_datetime=origtaxis
                 ## Run fits:
-                result=fu.Fit_Main_Beam(tempconcat,chans,freqs,coordbounds=FMB_coordbounds,ampbound=FMB_ampbound)
+                result=fu.Fit_Main_Beam(tempconcat,chans,freqs,theta_solve=False,coordbounds=FMB_coordbounds,ampbound=FMB_ampbound)
                 AFit_f_params_fine[i]=result[0]
                 APRarr_fine[i]=result[1]
                 GFit_f_params_fine[i]=result[2]
@@ -574,12 +576,12 @@ class CONCAT:
         if self.traceback==False:
             pass
     
-    def Main_Beam_Fitting(self,fit_param_directory='/hirax/GBO_Analysis_Outputs/main_beam_fits/',freqs=np.arange(1024)):
+    def Main_Beam_Fitting(self,fit_param_directory='/hirax/GBO_Analysis_Outputs/main_beam_fits/',freqs=np.arange(1024),theta_solve=False):
         if self.traceback==True:
             print('Performing 2DGauss and Airy fits for [{}]chans x [{}]freqs:'.format(self.n_channels,len(freqs)))
         if self.traceback==False:
             pass
-        A_popt,A_PR,G_popt,G_PR=fu.Fit_Main_Beam(inputconcat=self,chans=range(self.n_channels),freqs=freqs)
+        A_popt,A_PR,G_popt,G_PR=fu.Fit_Main_Beam(inputconcat=self,chans=range(self.n_channels),freqs=freqs,theta_solve=theta_solve)
         self.A_popt=A_popt
         self.A_PR=A_PR
         self.G_popt=G_popt
