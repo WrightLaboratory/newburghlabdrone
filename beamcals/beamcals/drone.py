@@ -45,7 +45,7 @@ import beamcals.geometry_utils as gu
 import beamcals.time_utils as tu
 
 class Drone_Data:
-    def __init__(self,Drone_Directory,FLYTAG,site_class,skip_rows=np.arange(1,500).tolist(),ignore_rtk=False):
+    def __init__(self,Drone_Directory,FLYTAG,site_class,tlb=0,tub=-1,ignore_rtk=False):
         self.FLYTAG=FLYTAG
         self.Drone_Directory=Drone_Directory
         ## Import variables from site-specific site_class object:
@@ -60,7 +60,14 @@ class Drone_Data:
         self.dish_pointings=site_class.pointings
         self.dish_polarizations=site_class.polarizations
         ## Read Drone RTK Data
-        drone_data=pandas.read_csv(self.Drone_Directory+self.FLYTAG,skiprows=skip_rows,low_memory=False)
+        if tlb == 0: 
+            skip_rows = np.arange(1,500).tolist()
+        else: skip_rows = np.arange(1,500+tlb).tolist()
+        if tub == -1:
+            drone_data=pandas.read_csv(self.Drone_Directory+self.FLYTAG,skiprows=skip_rows,low_memory=False)
+        else:
+            num_rows = tub - tlb 
+            drone_data=pandas.read_csv(self.Drone_Directory+self.FLYTAG,skiprows=skip_rows,nrows=num_rows,low_memory=False)
         ## Assign Drone RTK Data to class variables:
         self.ignore_rtk=ignore_rtk
         if "_processed" in self.FLYTAG:
