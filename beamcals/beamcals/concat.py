@@ -331,7 +331,7 @@ class CONCAT:
         if self.traceback==False:
             pass
         
-    def Synchronization_Function(self,inputcorr,inputdrone,coarse_params=[-5.0,5.0,0.2],fine_params=[-0.5,0.5,0.01],chans=np.array([2,3]),freqs=np.arange(100,1024,150),FMB_coordbounds=[50.0,50.0,150.0],FMB_ampbound=0.999):
+    def Synchronization_Function(self,inputcorr,inputdrone,coarse_params=[-5.0,5.0,0.2],fine_params=[-0.5,0.5,0.01],chans=np.array([2,3]),freqs=np.arange(100,1024,150),FMB_coordbounds=[30.0,30.0,150.0],FMB_ampbound=0.999):
         if self.traceback==True:
             print("Synchronizing data from correlator and drone:")
         if self.traceback==False:
