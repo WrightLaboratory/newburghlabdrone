@@ -53,7 +53,6 @@ def Gauss_2d_LC_func(P,x,y):
 
 
 def Fit_Main_Beam(inputconcat,chans,freqs,theta_solve,coordbounds=[50.0,50.0,150.0],ampbound=0.999):
-    print('using ampbound: ', ampbound)
     A_popt=np.zeros((len(chans),len(freqs),5))
     A_PR=np.zeros((len(chans),len(freqs)))
     G_popt=np.zeros((len(chans),len(freqs),7))
