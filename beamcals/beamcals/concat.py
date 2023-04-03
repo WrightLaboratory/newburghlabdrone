@@ -333,7 +333,7 @@ class CONCAT:
         if self.traceback==False:
             pass
         
-    def Synchronization_Function(self,inputcorr,inputdrone,coarse_params=[-10.0,10.0,0.2],fine_params=[-0.5,0.5,0.01],chans=np.array([2,3]),freqs=np.arange(100,1024,150),FMB_coordbounds=[50.0,50.0,150.0],FMB_ampbound=0.999):
+    def Synchronization_Function(self,inputcorr,inputdrone,coarse_params=[-5.0,5.0,0.2],fine_params=[-0.5,0.5,0.01],chans=np.array([2,3]),freqs=np.arange(100,1024,150),FMB_coordbounds=[30.0,30.0,150.0],FMB_ampbound=0.999):
         if self.traceback==True:
             print("Synchronizing data from correlator and drone:")
         if self.traceback==False:
@@ -579,12 +579,12 @@ class CONCAT:
         if self.traceback==False:
             pass
     
-    def Main_Beam_Fitting(self,fit_param_directory='/hirax/GBO_Analysis_Outputs/main_beam_fits/',freqs=np.arange(1024),theta_solve=False):
+    def Main_Beam_Fitting(self,fit_param_directory='/hirax/GBO_Analysis_Outputs/main_beam_fits/',freqs=np.arange(1024),theta_solve=False,FMB_ampbound=0.999):
         if self.traceback==True:
             print('Performing 2DGauss and Airy fits for [{}]chans x [{}]freqs:'.format(self.n_channels,len(freqs)))
         if self.traceback==False:
             pass
-        A_popt,A_PR,G_popt,G_PR=fu.Fit_Main_Beam(inputconcat=self,chans=range(self.n_channels),freqs=freqs,theta_solve=theta_solve)
+        A_popt,A_PR,G_popt,G_PR=fu.Fit_Main_Beam(inputconcat=self,chans=range(self.n_channels),freqs=freqs,theta_solve=theta_solve,ampbound=FMB_ampbound)
         self.A_popt=A_popt
         self.A_PR=A_PR
         self.G_popt=G_popt
