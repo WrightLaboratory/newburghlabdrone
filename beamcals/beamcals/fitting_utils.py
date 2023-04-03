@@ -80,8 +80,8 @@ def Fit_Main_Beam(inputconcat,chans,freqs,theta_solve,coordbounds=[50.0,50.0,150
                 ## shared params:
                 amp0=np.nanmax(mbV)
                 bg0=np.nanmin(mbV)
-                x00=inputconcat.dish_coords[int(chan/2),0]
-                y00=inputconcat.dish_coords[int(chan/2),1]
+                x00=inputconcat.dish_coords[chan,0]
+                y00=inputconcat.dish_coords[chan,1]
                 ## airy params:
                 rad0=25.0
                 ## 2dgauss params:
