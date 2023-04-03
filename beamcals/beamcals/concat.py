@@ -579,12 +579,12 @@ class CONCAT:
         if self.traceback==False:
             pass
     
-    def Main_Beam_Fitting(self,fit_param_directory='/hirax/GBO_Analysis_Outputs/main_beam_fits/',freqs=np.arange(1024),theta_solve=False,FMB_ampbound=0.999):
+    def Main_Beam_Fitting(self,fit_param_directory='/hirax/GBO_Analysis_Outputs/main_beam_fits/',freqs=np.arange(1024),theta_solve=False,FMB_ampbound=0.999,Vargs='None'):
         if self.traceback==True:
             print('Performing 2DGauss and Airy fits for [{}]chans x [{}]freqs:'.format(self.n_channels,len(freqs)))
         if self.traceback==False:
             pass
-        A_popt,A_PR,G_popt,G_PR=fu.Fit_Main_Beam(inputconcat=self,chans=range(self.n_channels),freqs=freqs,theta_solve=theta_solve,ampbound=FMB_ampbound)
+        A_popt,A_PR,G_popt,G_PR=fu.Fit_Main_Beam(inputconcat=self,chans=range(self.n_channels),freqs=freqs,theta_solve=theta_solve,ampbound=FMB_ampbound,Vargs=Vargs)
         self.A_popt=A_popt
         self.A_PR=A_PR
         self.G_popt=G_popt

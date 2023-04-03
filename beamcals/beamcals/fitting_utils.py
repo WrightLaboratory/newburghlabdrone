@@ -52,7 +52,7 @@ def Gauss_2d_LC_func(P,x,y):
     return amp*np.exp(-1.0*(xx + yy))+c
 
 
-def Fit_Main_Beam(inputconcat,chans,freqs,theta_solve,coordbounds=[50.0,50.0,150.0],ampbound=0.999):
+def Fit_Main_Beam(inputconcat,chans,freqs,theta_solve,coordbounds=[50.0,50.0,150.0],ampbound=0.999,Vargs='None'):
     A_popt=np.zeros((len(chans),len(freqs),5))
     A_PR=np.zeros((len(chans),len(freqs)))
     G_popt=np.zeros((len(chans),len(freqs),7))
@@ -66,7 +66,12 @@ def Fit_Main_Beam(inputconcat,chans,freqs,theta_solve,coordbounds=[50.0,50.0,150
         for j,find in enumerate(freqs):
             try:
                 ## apply amplitude cut:
-                tacut=inputconcat.t_index[inputconcat.V[:,find,chan]<ampbound*(np.nanmax(inputconcat.V[:,find,chan]))]
+                if Vargs=='None':
+                    tacut=inputconcat.t_index[inputconcat.V[:,find,chan]<ampbound*(np.nanmax(inputconcat.V[:,find,chan]))]
+                elif Vargs='bgsub':
+                    tacut=inputconcat.t_index[inputconcat.V_bgsub[:,find,chan]<ampbound*(np.nanmax(inputconcat.V_bgsub[:,find,chan]))]
+                else:
+                    tacut=inputconcat.t_index[inputconcat.V[:,find,chan]<ampbound*(np.nanmax(inputconcat.V[:,find,chan]))]
                 try:
                     ttcut=np.intersect1d(np.intersect1d(coordcut,tacut),inputconcat.inds_on)
                 except AttributeError:
@@ -75,7 +80,12 @@ def Fit_Main_Beam(inputconcat,chans,freqs,theta_solve,coordbounds=[50.0,50.0,150
                 mbx=inputconcat.drone_xyz_LC_interp[ttcut,0]
                 mby=inputconcat.drone_xyz_LC_interp[ttcut,1]
                 mbz=inputconcat.drone_xyz_LC_interp[ttcut,2]
-                mbV=inputconcat.V[ttcut,find,chan]
+                if Vargs=='None':
+                    mbV=inputconcat.V[ttcut,find,chan]
+                elif Vargs='bgsub':
+                    mbV=inputconcat.V[ttcut,find,chan]
+                else:
+                    mbV=inputconcat.V[ttcut,find,chan]
                 mb_input_data=np.array([mbx,mby,mbV])
                 ## shared params:
                 amp0=np.nanmax(mbV)
