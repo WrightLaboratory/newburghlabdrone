@@ -165,6 +165,12 @@ class Corr_Data:
             timedeltas=np.array([datetime.timedelta(seconds=x) for x in self.t])
             dt0=datetime.datetime.fromtimestamp(self.t0,pytz.timezone('America/Montreal')).astimezone(pytz.utc)
             self.t_arr_datetime=dt0+timedeltas
-        if 'CHIME' in site_class.name:
+        elif 'CHIME' in site_class.name:
             self.t_arr_datetime=np.array([datetime.datetime.fromtimestamp(x,pytz.utc) for x in self.t])
-        self.t_index=np.arange(len(self.t_arr_datetime))
+        elif 'D3A' in site_class.name:
+            self.t_arr_datetime=np.array([datetime.datetime.fromtimestamp(1e-9*x,pytz.utc) for x in self.t])
+        else:
+            timedeltas=np.array([datetime.timedelta(seconds=x) for x in self.t])
+            dt0=datetime.datetime.fromtimestamp(self.t0,pytz.timezone('America/Montreal')).astimezone(pytz.utc)
+            self.t_arr_datetime=dt0+timedeltas
+        self.t_index=np.arange(len(self.t))

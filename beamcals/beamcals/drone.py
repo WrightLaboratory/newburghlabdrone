@@ -11,6 +11,8 @@
 ## Doing the refactor, the previous DRONE MODULE has been moved here
     # moving functions in and out of the drone data class file.
     # to get around some NAN and some other issues, the first 500 rows of the datcon_csv files are cut
+## 20230403 -- WT
+## Moving to channel-based siteclass will change drone/concat, but it seems like its worth doing...
 
 
 #######################################################
@@ -196,11 +198,13 @@ class Drone_Data:
             self.coords_rpt[i]=[r_prime,phi_prime,theta_prime]
         print("  --> generating dish and receiver line of sight coordinates.")
         ## Calculate per-dish polar coordinates for drone/receiver in each other's beams as fxn of time:
+        self.xyz_per_dish=np.zeros((len(self.dish_keystrings),len(self.t_index),3)) # drone posn wrt receiver
         self.rpt_r_per_dish=np.zeros((len(self.dish_keystrings),len(self.t_index),3)) # drone posn wrt receiver
         self.rpt_t_per_dish=np.zeros((len(self.dish_keystrings),len(self.t_index),3)) # receiver posn wrt drone
         for i in range(len(self.dish_keystrings)):
             ## Receiver RPT after TRANS and ROT: (from receiver N to Drone in Receiver Cartesian "RC" coords)
             drone_xyz_RC=self.coords_xyz_LC-self.dish_coords[i] # translate LC to receiver i position
+            self.xyz_per_dish[i,:,:]=drone_xyz_RC
             ## Rotate coord system by dish pointing with rotation matrix (constant in t):
             rec_pointing_rot=gu.rot_mat(np.array([gu.xyz_to_rpt(self.dish_pointings[i])[2],0.0,gu.xyz_to_rpt(self.dish_pointings[i])[1]]))
             ## Populate receiver position wrt drone:

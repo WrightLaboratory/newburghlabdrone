@@ -172,6 +172,7 @@ class CONCAT:
         self.drone_xyz_LC_interp=np.NAN*np.ones((self.t_arr_datetime.shape[0],3))
         self.drone_rpt_interp=np.NAN*np.ones((self.t_arr_datetime.shape[0],3))
         self.drone_yaw_interp=np.NAN*np.ones(self.t_arr_datetime.shape[0])
+        self.drone_xyz_per_dish_interp=np.NAN*np.ones((DRONEDATCLASS.xyz_per_dish.shape[0],self.t_arr_datetime.shape[0],3))
         self.drone_rpt_r_per_dish_interp=np.NAN*np.ones((DRONEDATCLASS.rpt_r_per_dish.shape[0],self.t_arr_datetime.shape[0],3))
         self.drone_rpt_t_per_dish_interp=np.NAN*np.ones((DRONEDATCLASS.rpt_r_per_dish.shape[0],self.t_arr_datetime.shape[0],3))
         ## Interp Drone variables:
@@ -180,6 +181,7 @@ class CONCAT:
             self.drone_xyz_LC_interp[CORR_t_ind_lb:CORR_t_ind_ub,i]=np.interp(ds_CORR,ds_drone,DRONEDATCLASS.coords_xyz_LC[:,i])
             self.drone_rpt_interp[CORR_t_ind_lb:CORR_t_ind_ub,i]=np.interp(ds_CORR,ds_drone,DRONEDATCLASS.coords_rpt[:,i])
             for j in range(DRONEDATCLASS.rpt_r_per_dish.shape[0]):            
+                self.drone_xyz_per_dish_interp[j,CORR_t_ind_lb:CORR_t_ind_ub,i]=np.interp(ds_CORR,ds_drone,DRONEDATCLASS.xyz_per_dish[j,:,i])
                 self.drone_rpt_r_per_dish_interp[j,CORR_t_ind_lb:CORR_t_ind_ub,i]=np.interp(ds_CORR,ds_drone,DRONEDATCLASS.rpt_r_per_dish[j,:,i])
                 self.drone_rpt_t_per_dish_interp[j,CORR_t_ind_lb:CORR_t_ind_ub,i]=np.interp(ds_CORR,ds_drone,DRONEDATCLASS.rpt_t_per_dish[j,:,i])
         self.drone_yaw_interp[CORR_t_ind_lb:CORR_t_ind_ub]=np.interp(ds_CORR,ds_drone,DRONEDATCLASS.yaw[:])
@@ -464,6 +466,7 @@ class CONCAT:
         self.drone_xyz_LC_interp=tempconcat.drone_xyz_LC_interp
         self.drone_rpt_interp=tempconcat.drone_rpt_interp
         self.drone_yaw_interp=tempconcat.drone_yaw_interp
+        self.drone_xyz_per_dish_interp=tempconcat.drone_xyz_per_dish_interp
         self.drone_rpt_r_per_dish_interp=tempconcat.drone_rpt_r_per_dish_interp
         self.drone_rpt_t_per_dish_interp=tempconcat.drone_rpt_t_per_dish_interp
         inputdrone.t_arr_datetime=origtaxis
