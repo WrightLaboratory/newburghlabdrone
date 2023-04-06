@@ -68,7 +68,7 @@ def Fit_Main_Beam(inputconcat,chans,freqs,theta_solve,coordbounds=[50.0,50.0,150
                 ## apply amplitude cut:
                 if Vargs=='None':
                     tacut=inputconcat.t_index[inputconcat.V[:,find,chan]<ampbound*(np.nanmax(inputconcat.V[:,find,chan]))]
-                elif Vargs='bgsub':
+                elif Vargs=='bgsub':
                     tacut=inputconcat.t_index[inputconcat.V_bgsub[:,find,chan]<ampbound*(np.nanmax(inputconcat.V_bgsub[:,find,chan]))]
                 else:
                     tacut=inputconcat.t_index[inputconcat.V[:,find,chan]<ampbound*(np.nanmax(inputconcat.V[:,find,chan]))]
@@ -82,7 +82,7 @@ def Fit_Main_Beam(inputconcat,chans,freqs,theta_solve,coordbounds=[50.0,50.0,150
                 mbz=inputconcat.drone_xyz_LC_interp[ttcut,2]
                 if Vargs=='None':
                     mbV=inputconcat.V[ttcut,find,chan]
-                elif Vargs='bgsub':
+                elif Vargs=='bgsub':
                     mbV=inputconcat.V[ttcut,find,chan]
                 else:
                     mbV=inputconcat.V[ttcut,find,chan]
