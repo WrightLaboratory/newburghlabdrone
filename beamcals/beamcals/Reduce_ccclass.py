@@ -3,16 +3,32 @@ import datetime
 class Smallify:
     def __init__(self,concatclass):
 
-        # basics #
+        # basics # grabbed more vars (WT)
+        self.name = concatclass.name
         self.chmap = concatclass.chmap
+        self.automap = concatclass.automap
         self.crossmap = concatclass.crossmap
         self.Data_Directory = concatclass.Data_Directory
+        self.Gain_Directory = concatclass.Gain_Directory
+        self.filenames = concatclass.filenames
+        self.gainfile = concatclass.gainfile
+        self.Drone_Directory = concatclass.Drone_Directory
         self.FLYTAG = concatclass.FLYTAG
         self.freq = concatclass.freq
         self.t_arr_datetime = concatclass.t_arr_datetime
         self.t = concatclass.t
         self.t_delta_dji = concatclass.t_delta_dji
         self.t_delta_pulse = concatclass.t_delta_pulse
+        
+        # site info #
+        self.n_dishes = concatclass.n_dishes
+        self.n_channels = concatclass.n_channels
+        self.origin = concatclass.origin
+        self.prime_origin = concatclass.prime_origin
+        self.dish_keystrings = concatclass.dish_keystrings
+        self.dish_coords = concatclass.dish_coords
+        self.dish_pointings = concatclass.dish_pointings
+        self.dish_polarizations = concatclass.dish_polarizations
        
         # pulsing info #
         self.inds_off = concatclass.inds_off
@@ -25,6 +41,7 @@ class Smallify:
         
         # drone #
         self.drone_xyz_LC_interp = concatclass.drone_xyz_LC_interp
+        self.drone_xyz_per_dish_interp = concatclass.drone_xyz_per_dish_interp
         self.drone_yaw_interp = concatclass.drone_yaw_interp
 
         # RF data # 
