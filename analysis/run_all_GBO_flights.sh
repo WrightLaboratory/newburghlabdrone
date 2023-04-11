@@ -6,5 +6,5 @@ do
 done
 
 cd /hirax/GBO_Analysis_Outputs
-mv /hirax/GBO_Analysis_Outputs/FLY* /hirax/GBO_Analysis_Outputs/main_beam_fits
+mv /hirax/GBO_Analysis_Outputs/FLY* /hirax/GBO_Analysis_Outputs/traceback_plots
 
