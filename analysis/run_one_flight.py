@@ -29,20 +29,13 @@ config_directory="/hirax/GBO_Analysis_Outputs/concat_config_files/"
 with open(yamlfile, 'r') as fff:
     documents = yaml.safe_load(fff)
 flights = documents["flight_info"]["flights"]
-cdats = documents["flight_info"]["cdats"]
-tlbs = documents["flight_info"]["tlbs"]
-tubs = documents["flight_info"]["tubs"]
-fmaxes = documents["flight_info"]["fmaxes"]
-tclbs = documents["flight_info"]["tclbs"]
-tcubs = documents["flight_info"]["tcubs"]
-
-# run through Will's tutorial
 fly = flights[f]
-tub = tubs[f]
-tlb = tlbs[f]
-cdat = cdats[f]
-tclb = tclbs[f]
-tcub = tcubs[f]
+tub = documents["flight_info"]["tubs"][f]
+tlb = documents["flight_info"]["tlbs"][f]
+cdat = documents["flight_info"]["cdats"][f]
+tclb = documents["flight_info"]["tclbs"][f]
+tcub = documents["flight_info"]["tcubs"][f]
+fmax = documents["flight_info"]["fmaxes"][f]
 
 print('start time: ', datetime.datetime.now())
 print('Processing flight :', fly)   
@@ -60,7 +53,7 @@ dronedir='/hirax/all_drone_data/datcon_csv/'
 dronetest0825=drone.Drone_Data(Drone_Directory=dronedir,FLYTAG='FLY'+fly+'.csv',site_class=gbosite,tlb=tlb,tub=tub)
 
 
-if str(fmaxes[f]) != 'None':# 
+if str(fmax) != 'None':# 
     corrtest0825=corr.Corr_Data(Data_Directory=datadir,
                             Gain_Directory=gaindir,site_class=gbosite,
                             crossmap=[],Data_File_Index=np.arange(0,int(fmaxes[f])))
