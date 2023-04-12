@@ -24,7 +24,7 @@ class Smallify:
         self.n_dishes = concatclass.n_dishes
         self.n_channels = concatclass.n_channels
         self.origin = concatclass.origin
-        self.prime_origin = concatclass.prime_origin
+        #self.prime_origin = concatclass.prime_origin
         self.dish_keystrings = concatclass.dish_keystrings
         self.dish_coords = concatclass.dish_coords
         self.dish_pointings = concatclass.dish_pointings
@@ -46,11 +46,11 @@ class Smallify:
 
         # RF data # 
         #self.V = concatclass.V
-        self.V_bg = concatclass.V_bg
+        #self.V_bg = concatclass.V_bg
         self.V_bgsub = concatclass.V_bgsub
         #self.V_cross = concatclass.V_cross
-        self.V_cross_bg = concatclass.V_cross_bg
-        self.V_cross_bgsub = concatclass.V_cross_bgsub
+        #self.V_cross_bg = concatclass.V_cross_bg
+        #self.V_cross_bgsub = concatclass.V_cross_bgsub
 
         # fitting
         self.G_popt = concatclass.G_popt
@@ -63,3 +63,4 @@ class Smallify:
         Output_Prefix='{}{}_{}_ver_{}'.format(tmppickdir,tmpdronedir,tmpcorrdir,suff)
         tmppath=Output_Prefix+'_concat.pkl'
         self.tmppath = tmppath
+
