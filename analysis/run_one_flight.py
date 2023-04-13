@@ -56,7 +56,7 @@ dronetest0825=drone.Drone_Data(Drone_Directory=dronedir,FLYTAG='FLY'+fly+'.csv',
 if str(fmax) != 'None':# 
     corrtest0825=corr.Corr_Data(Data_Directory=datadir,
                             Gain_Directory=gaindir,site_class=gbosite,
-                            crossmap=[],Data_File_Index=np.arange(0,int(fmaxes[f])))
+                            crossmap=[],Data_File_Index=np.arange(0,int(fmax)))
 else: 
     corrtest0825=corr.Corr_Data(Data_Directory=datadir,
                             Gain_Directory=gaindir,site_class=gbosite,
