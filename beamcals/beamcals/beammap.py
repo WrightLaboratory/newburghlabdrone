@@ -201,13 +201,13 @@ class Beammap:
             if normalization=='none':
                 Vvals=ccc.V_bgsub[ccc.inds_on,:,:]
             elif normalization=='Gauss':
-                Vvals=(np.repeat(np.swapaxes(g_norm[:,:],0,1)[np.newaxis,:,:],len(ccc.inds_on),axis=0)**-1)*ccc.V_bgsub[ccc.inds_on,:,:]           
+                Vvals=(np.repeat(np.swapaxes(g_norm[:,fmin:fmax],0,1)[np.newaxis,:,:],len(ccc.inds_on),axis=0)**-1)*ccc.V_bgsub[ccc.inds_on,fmin:fmax,:]           
             ## loop through channels (i,chan) to find indices of nonzero cells in histogram
             for i,chan in enumerate(range(self.n_channels)):
                 for j,fr in enumerate(self.faxis):
                     print('Concat:{}/{}, Channel:{}/{}, Frequency:{}/{},           '.format(h+1,self.n_concats,i+1,self.n_channels,j+1,len(self.freq)),end='\r')
                     xf,yf=fccoords[i,:,0,j],fccoords[i,:,1,j]
-                    valsf=Vvals[:,fr,i]                        
+                    valsf=Vvals[:,j,i]                        
                     #histo2d,xbins,ybins=np.histogram2d(x,y,bins=[self.x_edges[:,i],self.y_edges[:,i]])
                     self.histogram_LC[:,:,j,i,h]=binned_statistic_2d(x=xf,y=yf,values=valsf,statistic='count',bins=[self.x_edges[:,i],self.y_edges[:,i]]).statistic
                     self.V_LC_mean[:,:,j,i,h]=binned_statistic_2d(x=xf,y=yf,values=valsf,statistic='mean',bins=[self.x_edges[:,i],self.y_edges[:,i]]).statistic
