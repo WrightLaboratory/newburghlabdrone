@@ -197,7 +197,7 @@ class Beammap:
             tmpcoords=np.repeat(ccc.drone_xyz_per_dish_interp[:,:,:,np.newaxis],len(self.freq),axis=3)
             shiftvec=np.array((self.x_offsets[:,:,h],self.y_offsets[:,:,h],np.zeros(self.x_offsets[:,:,h].shape)))
             tmpshifts=np.repeat(np.swapaxes(np.swapaxes(shiftvec,0,2),1,2)[:,np.newaxis,:,:],len(ccc.t),axis=1)
-            fccoords=(tmpcoords+tmpshifts)[:,ccc.inds_on]
+            fccoords=(tmpcoords-tmpshifts)[:,ccc.inds_on]
             if normalization=='none':
                 Vvals=ccc.V_bgsub[ccc.inds_on,:,:]
             elif normalization=='Gauss':
