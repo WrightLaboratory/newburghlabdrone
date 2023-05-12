@@ -201,7 +201,7 @@ class Beammap:
             if normalization=='none':
                 Vvals=ccc.V_bgsub[ccc.inds_on,:,:]
             elif normalization=='Gauss':
-                Vvals=(np.repeat(np.swapaxes(g_norm[:,fmin:fmax],0,1)[np.newaxis,:,:],len(ccc.inds_on),axis=0)**-1)*ccc.V_bgsub[ccc.inds_on,fmin:fmax,:]           
+                Vvals=(np.repeat(np.swapaxes(g_norm[:,fmin:fmax:fstep],0,1)[np.newaxis,:,:],len(ccc.inds_on),axis=0)**-1)*ccc.V_bgsub[ccc.inds_on,fmin:fmax:fstep,:]           
             ## loop through channels (i,chan) to find indices of nonzero cells in histogram
             for i,chan in enumerate(range(self.n_channels)):
                 for j,fr in enumerate(self.faxis):
