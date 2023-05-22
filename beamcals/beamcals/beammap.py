@@ -33,6 +33,9 @@ from scipy.stats import pearsonr
 import glob
 import pickle
 from scipy.stats import binned_statistic_2d
+from scipy.interpolate import griddata
+import pykrige.kriging_tools as kt
+from pykrige.ok import OrdinaryKriging
 
 ## Class for position-space sorting/averaging of beammap flight data, from time domain data:
 #defines coordinate vector from xmax to xmin spaced roughly by xres:
@@ -297,7 +300,159 @@ class Beammap:
                     cbar=fig.colorbar(images[j],cax=cax)
                     cbar.set_label(cbarlabels[j])
             tight_layout()
-                
+
+    def complex_interpolation(self, x_interp, y_interp, method='linear',variogram_model='spherical',outputs=False,Fargs=[0,0]):
+
+            '''
+            Interpolates a complex beam along a grid defined by 1-D vectors x-interp, y-interp.
+            x_interp and y_interp: 1-D vectors that define a grid to which the beam is interpolated
+            method: 'linear' for linear interpolation (faster) or 'krig' for Krig interpolation
+            variogram_model: variogram model for krig interpolation. Options: 'linear', 'power', 'gaussian', 'spherical', 'exponential', 'hole-effect'
+            outputs: if True, provides output plots for the indicated frequencies
+            Fargs: provide a list [fmin,fmax] with the starting and ending frequency indices for which you want to see output plots
+            '''
+
+            # if there is only one concat class, interpolates the mean. if not, interpolates the coadded/subtracted beam
+            if self.n_concats==1:
+                new_shape = np.asarray(self.V_LC_mean.shape)[0:4]
+                V_LC = np.reshape(self.V_LC_mean,new_shape)
+            else:
+                V_LC=self.V_LC_operation
+
+            V_LC_real = V_LC.real
+            V_LC_im = V_LC.imag
+
+            # checks if beam is complex 
+            if np.sum(V_LC_im)==0:
+                complex_beam = False
+
+            # creates arrays for interpolated values (either linear or krig interpolation)       
+            if method == 'linear':
+                self.beam_linear_interp = np.zeros((len(x_interp),len(y_interp),len(self.faxis),self.n_channels))
+
+                if complex_beam:
+                    self.beam_linear_interp_amp = np.zeros((len(x_interp),len(y_interp),len(self.faxis),self.n_channels))
+                    self.beam_linear_interp_phase = np.zeros((len(x_interp),len(y_interp),len(self.faxis),self.n_channels))
+
+            if method == 'krig':
+                self.Krig_Interp = np.zeros((len(x_interp),len(y_interp),len(self.faxis),self.n_channels))
+
+                if complex_beam:
+                    self.Krig_Interp_amp = np.zeros((len(x_interp),len(y_interp),len(self.faxis),self.n_channels))
+                    self.Krig_Interp_phase = np.zeros((len(x_interp),len(y_interp),len(self.faxis),self.n_channels))
+
+            # loops through and interpolates for all frequencies and channels
+            for f_index in range(len(self.faxis)):
+
+                for chanind in range(self.n_channels):
+
+                    # removes NaNs from the beam
+                    noNans = np.isfinite(self.V_LC_operation[:,:,f_index,chanind]) # all x, y, chosen frequency and channel
+                    V_LC_selected = self.V_LC_operation[noNans,f_index,chanind]
+
+                    # doesn't run if the whole grid is made up of NaNs
+                    if np.sum(noNans) != 0:
+
+                        x_noNan = self.x_centers_grid[noNans,chanind]
+                        y_noNan = self.y_centers_grid[noNans,chanind]
+
+                        # separating to real and imaginary
+                        V_LC_selected_real = V_LC_selected.real
+
+                        if complex_beam:
+                            V_LC_selected_im = V_LC_selected.imag
+
+                        if method=='linear':
+
+                            # linear interpolation
+                            x_interp_grid, y_interp_grid = np.meshgrid(x_interp,y_interp)
+
+                            beam_linear_interp_real = griddata((x_noNan,y_noNan), V_LC_selected_real, (x_interp_grid,y_interp_grid), method='linear')
+
+                            if complex_beam:
+
+                                # for complex beam, interpolates real and imaginary components separately, calculates amplitude and phase
+                                beam_linear_interp_im = griddata((x_noNan,y_noNan), V_LC_selected_im, (x_interp_grid,y_interp_grid), method='linear')
+                                self.beam_linear_interp[:,:,f_index,chanind] = beam_linear_interp_real + 1j*beam_linear_interp_im
+                                self.beam_linear_interp_amp[:,:,f_index,chanind] = np.abs(self.beam_linear_interp[:,:,f_index,chanind])
+                                self.beam_linear_interp_phase[:,:,f_index,chanind] = np.angle(self.beam_linear_interp[:,:,f_index,chanind])
+
+                            else:
+                                self.beam_linear_interp[:,:,f_index,chanind] = beam_linear_interp_real
+
+                        if method == 'krig':
+
+                            # krig interpolation
+                            beam_OK_real = OrdinaryKriging(x_noNan,y_noNan,V_LC_selected_real,variogram_model=variogram_model)
+                            Krig_Interp_real,self.real_interp_variance = beam_OK_real.execute("grid",x_interp,y_interp)
+
+                            if complex_beam:
+
+                                beam_OK_im = OrdinaryKriging(x_noNan,y_noNan,V_LC_selected_im,variogram_model=variogram_model)
+                                Krig_Interp_im,self.im_interp_variance = beam_OK_im.execute("grid",x_interp,y_interp)
+
+                                self.Krig_Interp[:,:,f_index,chanind] = Krig_Interp_real + 1j*Krig_Interp_im
+                                self.Krig_Interp_amp[:,:,f_index,chanind] = np.abs(self.Krig_Interp[:,:,f_index,chanind])
+                                self.Krig_Interp_phase[:,:,f_index,chanind] = np.angle(self.Krig_Interp[:,:,f_index,chanind])
+
+                            else:
+                                self.Krig_Interp[:,:,f_index,chanind] = Krig_Interp_real
+
+            if outputs==True:
+
+                fmin=Fargs[0]
+                fmax=Fargs[1]
+
+                if fmin==fmax:
+                    freq_indices=[fmin]
+                else:
+                    freq_indices=np.arange(fmin,fmax+1,1)
+
+                # provides output plots for all frequencies between fmin, fmax
+                for f_index in freq_indices:
+
+                    if complex_beam:
+
+                        fig,ax=subplots(self.n_channels,4,figsize=(15,5*self.n_channels))
+                        tight_layout()
+                        for chan_i in range(self.n_channels):
+                            ax[chan_i,0].pcolormesh(self.x_centers_grid[:,:,chan_i],self.y_centers_grid[:,:,chan_i],np.abs(V_LC_real[:,:,f_index,chan_i]+1j*V_LC_im[:,:,f_index,chan_i]),cmap=cm.gnuplot2,norm=LogNorm())
+                            ax[chan_i,0].set_title('Amplitude: Channel {}, {:.2f} Hz'.format(chan_i,self.freq[f_index]))
+                            ax[chan_i,1].pcolormesh(self.x_centers_grid[:,:,chan_i],self.y_centers_grid[:,:,chan_i],np.angle(V_LC_real[:,:,f_index,chan_i]+1j*V_LC_im[:,:,f_index,chan_i]),cmap=cm.gnuplot2,norm=LogNorm())
+                            ax[chan_i,1].set_title('Phase: Channel {}, {:.2f} Hz'.format(chan_i,self.freq[f_index]))
+
+                            if method=='linear':
+                                ax[chan_i,2].pcolormesh(x_interp,y_interp,self.beam_linear_interp_amp[:,:,f_index,chan_i],cmap=cm.gnuplot2,norm=LogNorm())
+                                ax[chan_i,3].pcolormesh(x_interp,y_interp,self.beam_linear_interp_phase[:,:,f_index,chan_i],cmap=cm.gnuplot2)
+
+                            if method=='krig':
+                                ax[chan_i,2].pcolormesh(x_interp,y_interp,self.Krig_Interp_amp[:,:,f_index,chan_i],cmap=cm.gnuplot2,norm=LogNorm())
+                                ax[chan_i,3].pcolormesh(x_interp, y_interp,self.Krig_Interp_amp[:,:,f_index,chan_i],cmap=cm.gnuplot2)
+
+                            ax[chan_i,2].set_title('Interpolated amplitude: Channel {}, {:.2f} Hz'.format(chan_i,self.freq[f_index]))
+                            ax[chan_i,3].set_title('Interpolated phase: Channel {}, {:.2f} Hz'.format(chan_i,self.freq[f_index]))
+
+                            for i in range(4):
+                                ax[chan_i,i].set_aspect('equal')
+
+                    else:
+
+                        fig,ax=subplots(self.n_channels,2,figsize=(20,5*self.n_channels))
+
+                        for chan_i in range(self.n_channels):
+
+                            ax[chan_i,0].pcolormesh(self.x_centers_grid[:,:,chan_i],self.y_centers_grid[:,:,chan_i],V_LC_real[:,:,f_index,chan_i],cmap=cm.gnuplot2,norm=LogNorm())
+                            ax[chan_i,0].set_title('Beam: Channel {}, {:.2f} Hz'.format(chan_i,self.freq[f_index]))
+                            ax[chan_i,1].set_title('Interpolated beam: Channel {}, {:.2f} Hz'.format(chan_i,self.freq[f_index]))
+
+                            if method=='linear':
+                                ax[chan_i,1].pcolormesh(x_interp,y_interp,self.beam_linear_interp[:,:,f_index,chan_i],cmap=cm.gnuplot2,norm=LogNorm())
+
+                            if method=='krig':
+                                ax[chan_i,1].pcolormesh(x_interp,y_interp,self.Krig_Interp[:,:,f_index,chan_i],cmap=cm.gnuplot2,norm=LogNorm())
+
+                            for i in range(2):
+                                ax[chan_i,i].set_aspect('equal')
                 
 
 
