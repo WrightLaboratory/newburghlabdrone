@@ -109,7 +109,7 @@ class Corr_Data:
         for i,file in enumerate(self.filenames[Data_File_Index]):
             try:
                 print("\r  --> Loading File: {}/{}".format(self.filenames[i],self.filenames[-1]),end="")
-                fd_n=h5py.File(self.Data_Directory+self.filenames[i], 'r')
+                fd_n=h5py.File(self.Data_Directory+self.filenames[Data_File_Index[i]], 'r')
                 vis=fd_n['vis'][:,flb:fub,:] # Visibility matrix
                 if 'CHIME' in site_class.name:
                     vis=np.array(fd_n['vis']).transpose(2,0,1)[:,flb:fub,:]
