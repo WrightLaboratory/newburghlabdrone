@@ -167,6 +167,8 @@ class Corr_Data:
             self.t_arr_datetime=dt0+timedeltas
         elif 'CHIME' in site_class.name:
             self.t_arr_datetime=np.array([datetime.datetime.fromtimestamp(x,pytz.utc) for x in self.t])
+        elif 'WLC' in site_class.name:
+            self.t_arr_datetime=np.array([datetime.datetime.fromtimestamp(x,pytz.utc) for x in self.t])
         elif 'D3A' in site_class.name:
             self.t_arr_datetime=np.array([datetime.datetime.fromtimestamp(1e-9*x,pytz.utc) for x in self.t])
         else:
