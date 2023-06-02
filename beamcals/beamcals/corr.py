@@ -109,7 +109,7 @@ class Corr_Data:
         for i,file in enumerate(self.filenames[Data_File_Index]):
             try:
                 print("\r  --> Loading File: {}/{}".format(self.filenames[i],self.filenames[-1]),end="")
-                fd_n=h5py.File(self.Data_Directory+self.filenames[i], 'r')
+                fd_n=h5py.File(self.Data_Directory+self.filenames[Data_File_Index[i]], 'r')
                 vis=fd_n['vis'][:,flb:fub,:] # Visibility matrix
                 if 'CHIME' in site_class.name:
                     vis=np.array(fd_n['vis']).transpose(2,0,1)[:,flb:fub,:]
@@ -136,6 +136,8 @@ class Corr_Data:
                             tm=(2.56e-6)*np.array(fd_n['index_map']['time']['fpga_count']) #construct time from fpga_counts
                     if use_ctime==True:
                         tm=np.array(fd_n['index_map']['time']['ctime']) # time axis
+                        if 'WLC' in site_class.name:
+                            tm=(2.56e-6)*np.array(fd_n['index_map']['time']['fpga_count']) #construct time from fpga_counts
                     freq=np.array([i[0] for i in fd_n['index_map']['freq'][flb:fub]]) # frequency axis
                     prod=fd_n['index_map']['prod'][:] # product axis
                     ## gain calibrate visibilities:
@@ -167,6 +169,10 @@ class Corr_Data:
             self.t_arr_datetime=dt0+timedeltas
         elif 'CHIME' in site_class.name:
             self.t_arr_datetime=np.array([datetime.datetime.fromtimestamp(x,pytz.utc) for x in self.t])
+        elif 'WLC' in site_class.name:
+            timedeltas=np.array([datetime.timedelta(seconds=x) for x in self.t])
+            dt0=datetime.datetime.fromtimestamp(self.t0,pytz.timezone('America/Montreal')).astimezone(pytz.utc)
+            self.t_arr_datetime=dt0+timedeltas
         elif 'D3A' in site_class.name:
             self.t_arr_datetime=np.array([datetime.datetime.fromtimestamp(1e-9*x,pytz.utc) for x in self.t])
         else:

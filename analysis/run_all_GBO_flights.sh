@@ -5,6 +5,4 @@ do
     python run_one_flight.py $i
 done
 
-cd /hirax/GBO_Analysis_Outputs
-mv /hirax/GBO_Analysis_Outputs/FLY* /hirax/GBO_Analysis_Outputs/traceback_plots
 
