@@ -44,15 +44,17 @@ def cedges(args):
     return np.linspace(cmin,cmax,int((cmax-cmin)/cres)+1)
 
 class Beammap:
-    def __init__(self,concatlist=[],gfitlist=[],Xargs=[-100,100,5],Yargs=[-100,100,5],\
+    def __init__(self,concatlist=[],gfitlist=[],ampcorrlist=[],Xargs=[-100,100,5],Yargs=[-100,100,5],\
                  Fargs=[0,1024,1],f_index=900,\
                  operation='coadd',inputstyle='pickle',normalization='none',vplot=True,\
                  pickle_directory='/hirax/GBO_Analysis_Outputs/flight_pickles/',\
                  gfit_directory='/hirax/GBO_Analysis_Outputs/main_beam_fits/',\
-                 flightmasterpath='../analysis/GBO_flights_forscripts.yaml'):
+                 flightmasterpath='/hirax/GBO_Analysis_Outputs/GBO_flights_forscripts.yaml',\
+                 ampcorr_directory='/hirax/GBO_Analysis_Outputs/amplitude_corrections/'):
         ## enable format of input to be load from 'pickle' filestring or bin/map using concat 'class':        
         self.concat_list=concatlist
         self.gfit_list=gfitlist
+        self.ampcorr_list=ampcorrlist      
         nchanslist=np.zeros(len(concatlist))
         if inputstyle=='pickle':
             for h,cstring in enumerate(concatlist):
@@ -143,7 +145,7 @@ class Beammap:
         ## loop through the concat classes (h,ccc=concatclass) and extract hist/V parameters:
         if vplot==True:
             fig0,axes0=subplots(nrows=2,ncols=4,figsize=(40,20))
-            
+      
         print("start of big ass loop is: {}".format(datetime.datetime.now()))
 
         for h,cstring in enumerate(concatlist):
@@ -195,6 +197,43 @@ class Beammap:
                                 pass
                             
                             
+            elif normalization=='Gauss_wcorr':
+                if len(gfitlist)==0:
+                    print('ERROR: --> The normalization cannot be applied because the gfitlist is empty')
+                elif len(gfitlist)!=len(concatlist):
+                    print('ERROR: --> The length of the gfitlist is not equal to the length of the concatlist')
+                elif  len(ampcorrlist)==0:
+                    print('ERROR: --> The normalization cannot be applied because the ampcorr is empty')
+                elif len(ampcorrlist)!=len(concatlist):
+                    print('ERROR: --> The length of the ampcorrlist is not equal to the length of the concatlist')
+                elif len(gfitlist)==len(concatlist) and len(ampcorrlist)==len(concatlist):
+                    ## make sure the normalization is being appropriately applied to the correct file:
+                    if concatlist[h].split('_')[0]==gfitlist[h].split('_')[0] and concatlist[h].split('_')[0]==ampcorrlist[h].split('_')[0]:
+                        with np.load(gfit_directory+gfitlist[h]) as gff:
+                            g_norm=gff['G_popt'][:,:,0]
+                            for i in range(self.n_channels):
+                                if self.copoldir in 'E':
+                                    COPOLIND=np.arange(self.n_channels).reshape(int(self.n_channels/2),2)[int(i/2)][0]
+                                    self.x_offsets[:,i,h]=gff['G_popt'][COPOLIND,self.faxis,1]-ccc.dish_coords[i][0] # seems like gauss params were found with original xyz, so remove dish offset
+                                    self.y_offsets[:,i,h]=gff['G_popt'][COPOLIND,self.faxis,3]-ccc.dish_coords[i][1] # seems like gauss params were found with original xyz, so remove dish offset
+                                elif self.copoldir in 'N':
+                                    COPOLIND=np.arange(self.n_channels).reshape(int(self.n_channels/2),2)[int(i/2)][1]
+                                    self.x_offsets[:,i,h]=gff['G_popt'][COPOLIND,self.faxis,1]-ccc.dish_coords[i][0] # seems like gauss params were found with original xyz, so remove dish offset
+                                    self.y_offsets[:,i,h]=gff['G_popt'][COPOLIND,self.faxis,3]-ccc.dish_coords[i][1] # seems like gauss params were found with original xyz, so remove dish offset
+                                else:
+                                    print('your loop sucks idiot')                                 
+                            if vplot==True:
+                                im1x=axes[0][0].scatter(ccc.drone_xyz_per_dish_interp[0,t_cut,0]+self.x_offsets[find,i,h],ccc.drone_xyz_per_dish_interp[0,t_cut,1]+self.y_offsets[find,i,h],c=(1.0/g_norm[0,f_index])*ccc.V_bgsub[t_cut,f_index,0],cmap=cm.gnuplot2,norm=LogNorm())
+                                im1y=axes[1][0].scatter(ccc.drone_xyz_per_dish_interp[1,t_cut,0]+self.x_offsets[find,i,h],ccc.drone_xyz_per_dish_interp[1,t_cut,1]+self.y_offsets[find,i,h],c=(1.0/g_norm[1,f_index])*ccc.V_bgsub[t_cut,f_index,1],cmap=cm.gnuplot2,norm=LogNorm())
+                                im1x0=axes0[0][0].scatter(ccc.drone_xyz_per_dish_interp[0,t_cut,0]+self.x_offsets[find,i,h],ccc.drone_xyz_per_dish_interp[0,t_cut,1]+self.y_offsets[find,i,h],c=(1.0/g_norm[0,f_index])*ccc.V_bgsub[t_cut,f_index,0],cmap=cm.gnuplot2,norm=LogNorm())
+                                im1y0=axes0[1][0].scatter(ccc.drone_xyz_per_dish_interp[1,t_cut,0]+self.x_offsets[find,i,h],ccc.drone_xyz_per_dish_interp[1,t_cut,1]+self.y_offsets[find,i,h],c=(1.0/g_norm[1,f_index])*ccc.V_bgsub[t_cut,f_index,1],cmap=cm.gnuplot2,norm=LogNorm())
+                            else:
+                                pass
+                        with open(ampcorr_directory+ampcorrlist[h],'rb') as acf:
+                           print(ampcorr_directory+ampcorrlist[h])
+                           gcorr_norm=pickle.load(acf)
+
+
             ## ATTEMPT TO BYPASS chan,freq LOOPS:
             ## create centroid-corrected per channel and frequency drone coordinate maps on a per-concat basis:
             tmpcoords=np.repeat(ccc.drone_xyz_per_dish_interp[:,:,:,np.newaxis],len(self.freq),axis=3)
@@ -205,6 +244,9 @@ class Beammap:
                 Vvals=ccc.V_bgsub[ccc.inds_on,:,:]
             elif normalization=='Gauss':
                 Vvals=(np.repeat(np.swapaxes(g_norm[:,fmin:fmax:fstep],0,1)[np.newaxis,:,:],len(ccc.inds_on),axis=0)**-1)*ccc.V_bgsub[ccc.inds_on,fmin:fmax:fstep,:]           
+            elif normalization=='Gauss_wcorr':    
+                Vvals_gcorr=(np.repeat(np.swapaxes(g_norm[:,fmin:fmax:fstep],0,1)[np.newaxis,:,:],len(ccc.inds_on),axis=0)**-1)*ccc.V_bgsub[ccc.inds_on,fmin:fmax:fstep,:]      
+                Vvals = Vvals_gcorr*gcorr_norm[self.faxis,:] 
             ## loop through channels (i,chan) to find indices of nonzero cells in histogram
             for i,chan in enumerate(range(self.n_channels)):
                 for j,fr in enumerate(self.faxis):
