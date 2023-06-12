@@ -64,3 +64,68 @@ class Smallify:
         tmppath=Output_Prefix+'_concat.pkl'
         self.tmppath = tmppath
 
+
+
+class Smallify_comap():
+    def __init__(self,beamclass):
+        self.concat_list=beamclass.concat_list        
+        self.name=beamclass.name
+        self.Data_Directory=beamclass.Data_Directory
+        self.Gain_Directory=beamclass.Gain_Directory
+        self.filenames=beamclass.filenames
+        self.gainfile=beamclass.gainfile
+        self.Drone_Directory=beamclass.Drone_Directory
+        self.FLYTAG=beamclass.FLYTAG
+        self.n_dishes=beamclass.n_dishes
+        self.n_channels=beamclass.n_channels
+        self.n_concats=beamclass.n_concats
+        self.chmap=beamclass.chmap
+        self.automap=beamclass.automap
+        self.crossmap=beamclass.crossmap
+        self.origin=beamclass.origin
+        self.dish_keystrings=beamclass.dish_keystrings
+        self.dish_coords=beamclass.dish_coords
+        self.dish_pointings=beamclass.dish_pointings
+        self.dish_polarizations=beamclass.dish_polarizations
+        self.fmin,self.fmax,self.fstep=beamclass.fmin,beamclass.fmax,beamclass.fstep
+        self.faxis=beamclass.faxis
+        self.freq=beamclass.freq
+        self.n_freqs = beamclass.n_freqs
+        self.normalization = beamclass.normalization
+        self.gfit_directory = beamclass.gfit_directory
+        self.ampcorr_directory = beamclass.ampcorr_directory
+        
+        #create x,y cartesian vectors (edges and centers) and grids for the beammap:
+        self.operation=beamclass.operation
+        
+        #need to extend this to dimensionality of channels in concatclass.V
+        self.x_edges=beamclass.x_edges
+        self.y_edges=beamclass.y_edges
+        self.x_edges_grid=beamclass.x_edges_grid
+        self.y_edges_grid=beamclass.y_edges_grid
+        self.x_centers=beamclass.x_centers
+        self.y_centers=beamclass.y_centers
+        self.x_centers_grid=beamclass.x_centers_grid
+        self.y_centers_grid=beamclass.y_centers_grid
+            
+        ## now need frequency dependent offset terms in shape (freq, channel, concat) to mimic V
+        self.x_offsets=beamclass.x_offsets
+        self.y_offsets=beamclass.y_offsets
+        
+        ## create arrays for V mean, V std, and histo: shape is (gridx, gridy, freq, chans, concatlist)
+        self.V_LC_sum=beamclass.V_LC_sum
+        self.V_LC_count=beamclass.V_LC_count
+
+        ## define inner and outer masks:
+        self.maskin = beamclass.maskin
+        self.maskout = beamclass.maskout    
+        
+        self.V_LC_operation_count = beamclass.V_LC_operation_count
+        self.V_LC_operation = beamclass.V_LC_operation
+                        
+        if self.operation=='std':
+            # unfortunately, repeat the above.... assume you're only doing this with pickle files, normalized
+            self.V_LC_err= beamclass.V_LC_err
+            
+            self.V_LC_operation_err = beamclass.V_LC_operation_err
+    
