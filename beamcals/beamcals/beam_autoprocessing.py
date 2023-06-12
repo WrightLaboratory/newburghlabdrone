@@ -133,7 +133,7 @@ class Beammap_forautoprocessing:
             Vvals, fccoords = self.get_VVals_tempcoords(cstring,h,doccs)
 
             if mask==True: # get mask type for this flight
-                arrmask = get_mask(self,doccs,self.FLYNUM)
+                arrmask = self.get_mask(doccs,self.FLYNUM)
                 
             ## loop through channels (i,chan) to find indices of nonzero cells in histogram
             for i,chan in enumerate(range(self.n_channels)):
@@ -184,7 +184,7 @@ class Beammap_forautoprocessing:
                 Vvals, fccoords = self.get_VVals_tempcoords(cstring,h,doccs)
             
                 if mask==True: # get mask type for this flight
-                    arrmask = get_mask(self,doccs,self.FLYNUM)
+                    arrmask = self.get_mask(doccs,self.FLYNUM)
             
                 ## loop through channels (i,chan) to find indices of nonzero cells in histogram
                 for i,chan in enumerate(range(self.n_channels)):
@@ -231,8 +231,6 @@ class Beammap_forautoprocessing:
         return arrmask
             
     def get_VVals_tempcoords(self,cstring,h,doccs):
-            
-    def get_VVals_tempcoords(self,cstring,h,doccs):
                 
             for j,fstr in enumerate(doccs['flight_info']['flights']):
                 if self.FLYNUM in fstr:
@@ -266,7 +264,7 @@ class Beammap_forautoprocessing:
                                                 
             if self.normalization=='Gauss_wcorr':
                 # get normalization
-                gcorrfile=glob.glob(self.ampcorr_directory+'*'+flynum+'*.pkl')[0]
+                gcorrfile=glob.glob(self.ampcorr_directory+'*'+self.FLYNUM+'*.pkl')[0]
                 with open(gcorrfile,'rb') as acf:
                     gcorr_norm=pickle.load(acf)
                 Vvals *= gcorr_norm[self.faxis,:][np.newaxis,:,:]
