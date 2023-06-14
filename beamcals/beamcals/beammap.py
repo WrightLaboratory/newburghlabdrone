@@ -50,7 +50,7 @@ class Beammap:
                  pickle_directory='/hirax/GBO_Analysis_Outputs/flight_pickles/',\
                  gfit_directory='/hirax/GBO_Analysis_Outputs/main_beam_fits/',\
                  flightmasterpath='/hirax/GBO_Analysis_Outputs/GBO_flights_forscripts.yaml',\
-                 ampcorr_directory='/hirax/GBO_Analysis_Outputs/amplitude_corrections/'):
+                 ampcorr_directory='/hirax/GBO_Analysis_Outputs/amplitude_corrections/',include_cross_data=False):
         ## enable format of input to be load from 'pickle' filestring or bin/map using concat 'class':        
         self.concat_list=concatlist
         self.gfit_list=gfitlist
@@ -141,6 +141,9 @@ class Beammap:
         self.V_LC_mean=np.NAN*np.ones((len(self.x_centers[:,0]),len(self.y_centers[:,0]),len(self.freq),self.n_channels,self.n_concats))
         self.V_LC_std=np.NAN*np.ones((len(self.x_centers[:,0]),len(self.y_centers[:,0]),len(self.freq),self.n_channels,self.n_concats))
         self.histogram_LC=np.NAN*np.ones((len(self.x_centers[:,0]),len(self.y_centers[:,0]),len(self.freq),self.n_channels,self.n_concats))
+        if include_cross_data==True:
+            self.V_LC_cross=np.NAN*np.ones((len(self.x_centers[:,0]),len(self.y_centers[:,0]),len(self.freq),len(self.crossmap),self.n_concats))
+            self.V_LC_cross=self.V_LC_cross.astype(complex)
         
         ## loop through the concat classes (h,ccc=concatclass) and extract hist/V parameters:
         if vplot==True:
@@ -250,14 +253,24 @@ class Beammap:
             ## loop through channels (i,chan) to find indices of nonzero cells in histogram
             for i,chan in enumerate(range(self.n_channels)):
                 for j,fr in enumerate(self.faxis):
-                    print('Concat:{}/{}, Channel:{}/{}, Frequency:{}/{},           '.format(h+1,self.n_concats,i+1,self.n_channels,j+1,len(self.freq)),end='\r')
+                    print('autos: Concat:{}/{}, Channel:{}/{}, Frequency:{}/{},           '.format(h+1,self.n_concats,i+1,self.n_channels,j+1,len(self.freq)),end='\r')
                     xf,yf=fccoords[i,:,0,j],fccoords[i,:,1,j]
                     valsf=Vvals[:,j,i]                        
                     #histo2d,xbins,ybins=np.histogram2d(x,y,bins=[self.x_edges[:,i],self.y_edges[:,i]])
                     self.histogram_LC[:,:,j,i,h]=binned_statistic_2d(x=xf,y=yf,values=valsf,statistic='count',bins=[self.x_edges[:,i],self.y_edges[:,i]]).statistic
                     self.V_LC_mean[:,:,j,i,h]=binned_statistic_2d(x=xf,y=yf,values=valsf,statistic='mean',bins=[self.x_edges[:,i],self.y_edges[:,i]]).statistic
                     self.V_LC_std[:,:,j,i,h]=binned_statistic_2d(x=xf,y=yf,values=valsf,statistic='std',bins=[self.x_edges[:,i],self.y_edges[:,i]]).statistic
-                              
+            if include_cross_data==True:
+                for i,cmind in enumerate(self.crossmap):
+                    Vvals_cross=ccc.V_cross_bgsub[ccc.inds_on,:,:]
+                    for j,fr in enumerate(self.faxis):
+                        print('cross: Concat:{}/{}, Channel:{}/{}, Frequency:{}/{},           '.format(h+1,self.n_concats,i+1,len(self.crossmap),j+1,len(self.freq)),end='\r')
+                        xf,yf=fccoords[i,:,0,j],fccoords[i,:,1,j]
+                        valsf_cross=Vvals_cross[:,j,i]  
+                        realvals=binned_statistic_2d(x=xf,y=yf,values=np.real(valsf_cross),statistic='mean',bins=[self.x_edges[:,i],self.y_edges[:,i]]).statistic
+                        imagvals=binned_statistic_2d(x=xf,y=yf,values=np.imag(valsf_cross),statistic='mean',bins=[self.x_edges[:,i],self.y_edges[:,i]]).statistic
+                        self.V_LC_cross[:,:,j,i,h]=realvals+(1.0j*imagvals)
+                        
 #             ## THIS LOOP IS SLOW, MABE WE FIND A WAY TO DO IT IN ARRAY SPACE: SAVE THIS DONT DELETE YET
 #             ## loop through channels (i,chan) to find indices of nonzero cells in histogram
 #             for i,chan in enumerate(range(self.n_channels)):
@@ -308,7 +321,7 @@ class Beammap:
                         cbar.set_label(cbarlabels[j])
                 tight_layout()
                 
-        print("end of bigass loop is: {}".format(datetime.datetime.now()))
+        print("end of chan/freq loop is: {}".format(datetime.datetime.now()))
 
         if operation=='coadd':
             self.V_LC_operation=np.NAN*np.ones(self.V_LC_mean[:,:,:,:,0].shape)
@@ -318,7 +331,7 @@ class Beammap:
                 self.V_LC_operation=np.NAN*np.ones(self.V_LC_mean[:,:,:,:,0].shape)
                 self.V_LC_operation=np.nansum(np.array([self.V_LC_mean[:,:,:,:,0],-1*self.V_LC_mean[:,:,:,:,1]]),axis=0)
             else:
-                print("--> V_LC_operation can only be instantiated if the length of concatlist is 2")
+                print("--> V_LC_operation can only be instantiated if the length of concatlist is exactly 2")
         if vplot==True:
             for i in range(2):
                 ax1,ax2,ax3,ax4=axes0[i]

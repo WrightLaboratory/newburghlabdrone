@@ -1,0 +1,20 @@
+#YAML_CONFIG_FILE for 20230519 Flights over WLC NFandFF flights...
+
+flight_info:
+    flights: ['779','780','781','782','783','784']
+    tlbs: [37300,10500,21200,16500,9300,8600]
+    tubs: [59300,27700,39300,339000,26700,30700]
+    cdats: ['20230519T175258Z_Suit','20230519T184054Z_Suit','20230519T190815Z_Suit','20230519T195003Z_Suit',
+    '20230519T202204Z_Suit','20230519T204449Z_Suit']
+    fmaxes: ['None','None','None','None','None','None']
+    pols: ['N','N','N','E','E','E']
+    attns: [0,10,10,10,10,0]
+    tclbs: [37300,10500,21200,16500,9300,8600]
+    tcubs: [59300,27700,39300,339000,26700,30700]
+
+flag_info:
+    N_pols: [1]
+    E_pols: [0]
+
+freq_info:
+   good_freqs: [260,270,345]

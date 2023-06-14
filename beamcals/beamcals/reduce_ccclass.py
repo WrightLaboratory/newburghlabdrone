@@ -1,7 +1,7 @@
 import datetime
 
 class Smallify:
-    def __init__(self,concatclass):
+    def __init__(self,concatclass,pickle_directory='/hirax/GBO_Analysis_Outputs/flight_pickles/',include_cross_data=False):
 
         # basics # grabbed more vars (WT)
         self.name = concatclass.name
@@ -54,10 +54,20 @@ class Smallify:
 
         # fitting
         self.G_popt = concatclass.G_popt
+        
+        # WT 20230613 - Include binary flag/parse options for cross-correlations:
+        if include_cross_data==True:
+            self.V_cross_bgsub = concatclass.V_cross_bgsub
+        elif include_cross_data==False:
+            pass          
 
         # text for pickle file name
-        tmppickdir='/hirax/GBO_Analysis_Outputs/flight_pickles/'
-        tmpcorrdir=self.Data_Directory.split("_yale")[0].split("TONE_ACQ/")[1]
+        tmppickdir=pickle_directory
+        if 'TONE_ACQ' in self.Data_Directory:
+            tmpcorrdir=self.Data_Directory.split("_yale")[0].split("TONE_ACQ/")[1]
+        elif 'NFandFF' in self.Data_Directory:
+            tmpcorrdir=self.Data_Directory.split("_Suit")[0].split("NFandFF/")[1]
+        #tmpcorrdir=self.Data_Directory.split("_yale")[0].split("TONE_ACQ/")[1]
         tmpdronedir=self.FLYTAG.split('.')[0]
         suff=datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
         Output_Prefix='{}{}_{}_ver_{}'.format(tmppickdir,tmpdronedir,tmpcorrdir,suff)

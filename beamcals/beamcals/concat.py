@@ -58,7 +58,10 @@ class CONCAT:
             print("  --> "+DRONEDATCLASS.FLYTAG)
             if self.save_traceback==True:
                 print('Creating directory for saving traceback and analysis outputs:')
-                tmpcorrdir=self.Data_Directory.split("_yale")[0].split("TONE_ACQ/")[1]
+                if 'TONE_ACQ' in self.Data_Directory:
+                    tmpcorrdir=self.Data_Directory.split("_yale")[0].split("TONE_ACQ/")[1]
+                elif 'NFandFF' in self.Data_Directory:
+                    tmpcorrdir=self.Data_Directory.split("_Suit")[0].split("NFandFF/")[1]
                 tmpdronedir=self.FLYTAG.split('.')[0]
                 tmpoutputdir=output_directory+'{}_{}'.format(tmpdronedir,tmpcorrdir)+'/'
                 if os.path.exists(tmpoutputdir)==False:                
@@ -68,7 +71,7 @@ class CONCAT:
                     suff=datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
                     self.Output_Prefix='{}_{}_ver_{}'.format(tmpdronedir,tmpcorrdir,suff)
                     self.Output_Directory=output_directory+'{}_{}_ver_{}'.format(tmpdronedir,tmpcorrdir,suff)+'/'
-                os.mkdir(self.Output_Directory)
+                os.makedirs(self.Output_Directory)
                 print("  --> "+self.Output_Directory)
             if self.save_traceback==False:
                 print("  --> Traceback outputs will not be saved...")
@@ -83,7 +86,10 @@ class CONCAT:
         ## If we DO want to load previous config files, we enter this loop:
         if self.load_yaml==True:
             ## First we check if a config has previously been saved using these two data sets:
-            tmpcorrdir=self.Data_Directory.split("_yale")[0].split("TONE_ACQ/")[1]
+            if 'TONE_ACQ' in self.Data_Directory:
+                tmpcorrdir=self.Data_Directory.split("_yale")[0].split("TONE_ACQ/")[1]
+            elif 'NFandFF' in self.Data_Directory:
+                tmpcorrdir=self.Data_Directory.split("_Suit")[0].split("NFandFF/")[1]
             tmpdronedir=self.FLYTAG.split('.')[0]
             tmpconfigpath=self.Config_Directory+'config_{}_{}.yaml'.format(tmpdronedir,tmpcorrdir)
             self.yaml_exists=os.path.exists(tmpconfigpath)
@@ -579,12 +585,12 @@ class CONCAT:
         if self.traceback==False:
             pass
     
-    def Main_Beam_Fitting(self,fit_param_directory='/hirax/GBO_Analysis_Outputs/main_beam_fits/',freqs=np.arange(1024),theta_solve=False,FMB_ampbound=0.999,Vargs='None'):
+    def Main_Beam_Fitting(self,fit_param_directory='/hirax/GBO_Analysis_Outputs/main_beam_fits/',freqs=np.arange(1024),theta_solve=False,FMB_ampbound=0.999,coordbounds=[50.0,50.0,150.0],Vargs='None'):
         if self.traceback==True:
             print('Performing 2DGauss and Airy fits for [{}]chans x [{}]freqs:'.format(self.n_channels,len(freqs)))
         if self.traceback==False:
             pass
-        A_popt,A_PR,G_popt,G_PR=fu.Fit_Main_Beam(inputconcat=self,chans=range(self.n_channels),freqs=freqs,theta_solve=theta_solve,ampbound=FMB_ampbound,Vargs=Vargs)
+        A_popt,A_PR,G_popt,G_PR=fu.Fit_Main_Beam(inputconcat=self,chans=range(self.n_channels),freqs=freqs,coordbounds=coordbounds,theta_solve=theta_solve,ampbound=FMB_ampbound,Vargs=Vargs)
         self.A_popt=A_popt
         self.A_PR=A_PR
         self.G_popt=G_popt
