@@ -104,9 +104,9 @@ class Beammap:
         #create x,y cartesian vectors (edges and centers) and grids for the beammap:
         self.operation=operation
         xedges,yedges=(cedges(Xargs),cedges(Yargs))
-        xedgesgrid,yedgesgrid=np.meshgrid(xedges,yedges)
+        xedgesgrid,yedgesgrid=np.meshgrid(xedges,yedges,indexing='ij')
         xcenters,ycenters=(cedges(Xargs)[:-1]+Xargs[2]/2.0,cedges(Yargs)[:-1]+Yargs[2]/2.0)
-        xcentersgrid,ycentersgrid=np.meshgrid(xcenters,ycenters)
+        xcentersgrid,ycentersgrid=np.meshgrid(xcenters,ycenters,indexing='ij')
         
         #need to extend this to dimensionality of channels in concatclass.V
         self.x_edges=np.zeros(xedges.shape+(self.n_channels,))
@@ -300,10 +300,10 @@ class Beammap:
             if vplot==True:
                 for i in range(2):
                     ax1,ax2,ax3,ax4=axes[i]
-                    im2=ax2.pcolormesh(self.x_edges_grid[:,:,i],self.y_edges_grid[:,:,i],self.histogram_LC[:,:,find,i,h].T,cmap=cm.gnuplot2)
+                    im2=ax2.pcolormesh(self.x_edges_grid[:,:,i],self.y_edges_grid[:,:,i],self.histogram_LC[:,:,find,i,h],cmap=cm.gnuplot2)
                     im2.set_clim(0,30)
-                    im3=ax3.pcolormesh(self.x_edges_grid[:,:,i],self.y_edges_grid[:,:,i],self.V_LC_mean[:,:,find,i,h].T,cmap=cm.gnuplot2,norm=LogNorm())
-                    im4=ax4.pcolormesh(self.x_edges_grid[:,:,i],self.y_edges_grid[:,:,i],self.V_LC_std[:,:,find,i,h].T,cmap=cm.gnuplot2,norm=LogNorm())
+                    im3=ax3.pcolormesh(self.x_edges_grid[:,:,i],self.y_edges_grid[:,:,i],self.V_LC_mean[:,:,find,i,h],cmap=cm.gnuplot2,norm=LogNorm())
+                    im4=ax4.pcolormesh(self.x_edges_grid[:,:,i],self.y_edges_grid[:,:,i],self.V_LC_std[:,:,find,i,h],cmap=cm.gnuplot2,norm=LogNorm())
                     images=[[im1x,im1y][i],im2,im3,im4]
                     titles=['Unbinned Beammaps ({} CH{} {:.2f} MHz)'.format(self.concat_list[h].split('_')[0],i,self.freq[find]),\
                             'Histogram ({} CH{} {:.2f} MHz)'.format(self.concat_list[h].split('_')[0],i,self.freq[find]),\
@@ -335,10 +335,10 @@ class Beammap:
         if vplot==True:
             for i in range(2):
                 ax1,ax2,ax3,ax4=axes0[i]
-                im2=ax2.pcolormesh(self.x_edges_grid[:,:,i],self.y_edges_grid[:,:,i],np.nansum(self.histogram_LC[:,:,find,i,:],axis=2).T,cmap=cm.gnuplot2)
+                im2=ax2.pcolormesh(self.x_edges_grid[:,:,i],self.y_edges_grid[:,:,i],np.nansum(self.histogram_LC[:,:,find,i,:],axis=2),cmap=cm.gnuplot2)
                 im2.set_clim(0,300)
-                im3=ax3.pcolormesh(self.x_edges_grid[:,:,i],self.y_edges_grid[:,:,i],self.V_LC_operation[:,:,find,i].T,cmap=cm.gnuplot2,norm=LogNorm())
-                im4=ax4.pcolormesh(self.x_edges_grid[:,:,i],self.y_edges_grid[:,:,i],np.nanmean(self.V_LC_std[:,:,find,i,:],axis=2).T,cmap=cm.gnuplot2,norm=LogNorm())
+                im3=ax3.pcolormesh(self.x_edges_grid[:,:,i],self.y_edges_grid[:,:,i],self.V_LC_operation[:,:,find,i],cmap=cm.gnuplot2,norm=LogNorm())
+                im4=ax4.pcolormesh(self.x_edges_grid[:,:,i],self.y_edges_grid[:,:,i],np.nanmean(self.V_LC_std[:,:,find,i,:],axis=2),cmap=cm.gnuplot2,norm=LogNorm())
                 images=[[im1x0,im1y0][i],im2,im3,im4]
                 titles=['Unbinned Beammaps ({} CH{} {:.2f} MHz)'.format(self.name,i,self.freq[find]),\
                         'Histogram ({} CH{} {:.2f} MHz)'.format(self.name,i,self.freq[find]),\
