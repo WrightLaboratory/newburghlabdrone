@@ -86,9 +86,9 @@ class Beammap_forautoprocessing:
         #create x,y cartesian vectors (edges and centers) and grids for the beammap:
         self.operation=operation
         xedges,yedges=(cedges(Xargs),cedges(Yargs))
-        xedgesgrid,yedgesgrid=np.meshgrid(xedges,yedges)
+        xedgesgrid,yedgesgrid=np.meshgrid(xedges,yedges,indexing='ij')
         xcenters,ycenters=(cedges(Xargs)[:-1]+Xargs[2]/2.0,cedges(Yargs)[:-1]+Yargs[2]/2.0)
-        xcentersgrid,ycentersgrid=np.meshgrid(xcenters,ycenters)
+        xcentersgrid,ycentersgrid=np.meshgrid(xcenters,ycenters,indexing='ij')
         
         #need to extend this to dimensionality of channels in concatclass.V
         self.x_edges=np.zeros(xedges.shape+(self.n_channels,))
