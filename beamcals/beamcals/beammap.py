@@ -96,11 +96,12 @@ class Beammap:
         self.dish_coords=CONCATCLASS.dish_coords
         self.dish_pointings=CONCATCLASS.dish_pointings
         self.dish_polarizations=CONCATCLASS.dish_polarizations
-        fmin,fmax,fstep=Fargs
-        self.faxis=np.arange(fmin,fmax,fstep)
+        self.fmin,self.fmax,self.fstep=Fargs
+        self.faxis=np.arange(self.fmin,self.fmax,self.fstep)
+        self.n_freqs=len(self.faxis)
         self.freq=CONCATCLASS.freq[self.faxis]
         find=np.where(self.faxis==f_index)[0][0]
-        
+               
         #create x,y cartesian vectors (edges and centers) and grids for the beammap:
         self.operation=operation
         xedges,yedges=(cedges(Xargs),cedges(Yargs))
@@ -246,9 +247,9 @@ class Beammap:
             if normalization=='none':
                 Vvals=ccc.V_bgsub[ccc.inds_on,:,:]
             elif normalization=='Gauss':
-                Vvals=(np.repeat(np.swapaxes(g_norm[:,fmin:fmax:fstep],0,1)[np.newaxis,:,:],len(ccc.inds_on),axis=0)**-1)*ccc.V_bgsub[ccc.inds_on,fmin:fmax:fstep,:]           
+                Vvals=(np.repeat(np.swapaxes(g_norm[:,self.fmin:self.fmax:self.fstep],0,1)[np.newaxis,:,:],len(ccc.inds_on),axis=0)**-1)*ccc.V_bgsub[ccc.inds_on,self.fmin:self.fmax:self.fstep,:]           
             elif normalization=='Gauss_wcorr':    
-                Vvals_gcorr=(np.repeat(np.swapaxes(g_norm[:,fmin:fmax:fstep],0,1)[np.newaxis,:,:],len(ccc.inds_on),axis=0)**-1)*ccc.V_bgsub[ccc.inds_on,fmin:fmax:fstep,:]      
+                Vvals_gcorr=(np.repeat(np.swapaxes(g_norm[:,self.fmin:self.fmax:self.fstep],0,1)[np.newaxis,:,:],len(ccc.inds_on),axis=0)**-1)*ccc.V_bgsub[ccc.inds_on,self.fmin:self.fmax:self.fstep,:]      
                 Vvals = Vvals_gcorr*gcorr_norm[self.faxis,:] 
             ## loop through channels (i,chan) to find indices of nonzero cells in histogram
             for i,chan in enumerate(range(self.n_channels)):
@@ -369,10 +370,12 @@ class Beammap:
 
             # if there is only one concat class, interpolates the mean. if not, interpolates the coadded/subtracted beam
             if self.n_concats==1:
-                new_shape = np.asarray(self.V_LC_mean.shape)[0:4]
-                V_LC = np.reshape(self.V_LC_mean,new_shape)
+                new_shape = np.asarray(self.V_LC_cross.shape)[0:4]
+                V_LC = np.reshape(self.V_LC_cross,new_shape)
             else:
-                V_LC=self.V_LC_operation
+                V_LC=self.V_LC_cross
+                new_shape = np.asarray(self.V_LC_cross.shape)[0:4]
+                V_LC = np.reshape(self.V_LC_cross,new_shape)
 
             V_LC_real = V_LC.real
             V_LC_im = V_LC.imag
@@ -380,30 +383,34 @@ class Beammap:
             # checks if beam is complex 
             if np.sum(V_LC_im)==0:
                 complex_beam = False
+            elif np.sum(V_LC_im)!=0:
+                complex_beam = True
 
             # creates arrays for interpolated values (either linear or krig interpolation)       
             if method == 'linear':
-                self.beam_linear_interp = np.zeros((len(x_interp),len(y_interp),len(self.faxis),self.n_channels))
+                self.beam_linear_interp = np.zeros(V_LC.shape).astype(complex)
 
                 if complex_beam:
-                    self.beam_linear_interp_amp = np.zeros((len(x_interp),len(y_interp),len(self.faxis),self.n_channels))
-                    self.beam_linear_interp_phase = np.zeros((len(x_interp),len(y_interp),len(self.faxis),self.n_channels))
+                    self.beam_linear_interp_amp = np.zeros(V_LC.shape)
+                    self.beam_linear_interp_phase = np.zeros(V_LC.shape)
+                    self.beam_linear_interp_phase_unwrapped = np.zeros(V_LC.shape)
 
             if method == 'krig':
-                self.Krig_Interp = np.zeros((len(x_interp),len(y_interp),len(self.faxis),self.n_channels))
+                self.Krig_Interp = np.zeros(V_LC.shape)
 
                 if complex_beam:
-                    self.Krig_Interp_amp = np.zeros((len(x_interp),len(y_interp),len(self.faxis),self.n_channels))
-                    self.Krig_Interp_phase = np.zeros((len(x_interp),len(y_interp),len(self.faxis),self.n_channels))
+                    self.Krig_Interp_amp = np.zeros(V_LC.shape)
+                    self.Krig_Interp_phase = np.zeros(V_LC.shape)
+                    self.Krig_Interp_phase_unwrapped = np.zeros(V_LC.shape)
 
             # loops through and interpolates for all frequencies and channels
             for f_index in range(len(self.faxis)):
 
-                for chanind in range(self.n_channels):
+                for chanind in range(V_LC.shape[3]):
 
                     # removes NaNs from the beam
-                    noNans = np.isfinite(self.V_LC_operation[:,:,f_index,chanind]) # all x, y, chosen frequency and channel
-                    V_LC_selected = self.V_LC_operation[noNans,f_index,chanind]
+                    noNans = np.isfinite(V_LC[:,:,f_index,chanind]) # all x, y, chosen frequency and channel
+                    V_LC_selected = V_LC[noNans,f_index,chanind]
 
                     # doesn't run if the whole grid is made up of NaNs
                     if np.sum(noNans) != 0:
@@ -414,13 +421,13 @@ class Beammap:
                         # separating to real and imaginary
                         V_LC_selected_real = V_LC_selected.real
 
-                        if complex_beam:
+                        if complex_beam==True:
                             V_LC_selected_im = V_LC_selected.imag
 
                         if method=='linear':
 
                             # linear interpolation
-                            x_interp_grid, y_interp_grid = np.meshgrid(x_interp,y_interp)
+                            x_interp_grid,y_interp_grid=np.meshgrid(x_interp,y_interp,indexing='ij')
 
                             beam_linear_interp_real = griddata((x_noNan,y_noNan), V_LC_selected_real, (x_interp_grid,y_interp_grid), method='linear')
 
@@ -428,7 +435,7 @@ class Beammap:
 
                                 # for complex beam, interpolates real and imaginary components separately, calculates amplitude and phase
                                 beam_linear_interp_im = griddata((x_noNan,y_noNan), V_LC_selected_im, (x_interp_grid,y_interp_grid), method='linear')
-                                self.beam_linear_interp[:,:,f_index,chanind] = beam_linear_interp_real + 1j*beam_linear_interp_im
+                                self.beam_linear_interp[:,:,f_index,chanind] = beam_linear_interp_real + 1.0j*beam_linear_interp_im
                                 self.beam_linear_interp_amp[:,:,f_index,chanind] = np.abs(self.beam_linear_interp[:,:,f_index,chanind])
                                 self.beam_linear_interp_phase[:,:,f_index,chanind] = np.angle(self.beam_linear_interp[:,:,f_index,chanind])
                                 self.beam_linear_interp_phase_unwrapped[:,:,f_index,chanind]=np.unwrap(self.beam_linear_interp_phase[:,:,f_index,chanind])
@@ -457,22 +464,22 @@ class Beammap:
 
             if outputs==True:
 
-                fmin=Fargs[0]
-                fmax=Fargs[1]
+                self.fmin=Fargs[0]
+                self.fmax=Fargs[1]
 
-                if fmin==fmax:
-                    freq_indices=[fmin]
+                if self.fmin==self.fmax:
+                    freq_indices=[self.fmin]
                 else:
-                    freq_indices=np.arange(fmin,fmax+1,1)
+                    freq_indices=np.arange(self.fmin,self.fmax+1,1)
 
-                # provides output plots for all frequencies between fmin, fmax
+                # provides output plots for all frequencies between self.fmin, self.fmax
                 for f_index in freq_indices:
 
                     if complex_beam:
 
-                        fig,ax=subplots(self.n_channels,4,figsize=(15,5*self.n_channels))
+                        fig,ax=subplots(self.V_LC_cross.shape[3],4,figsize=(15,5*self.V_LC_cross.shape[3]))
                         tight_layout()
-                        for chan_i in range(self.n_channels):
+                        for chan_i in range(self.V_LC_cross.shape[3]):
                             ax[chan_i,0].pcolormesh(self.x_centers_grid[:,:,chan_i],self.y_centers_grid[:,:,chan_i],np.abs(V_LC_real[:,:,f_index,chan_i]+1j*V_LC_im[:,:,f_index,chan_i]),cmap=cm.gnuplot2,norm=LogNorm())
                             ax[chan_i,0].set_title('Amplitude: Channel {}, {:.2f} Hz'.format(chan_i,self.freq[f_index]))
                             ax[chan_i,1].pcolormesh(self.x_centers_grid[:,:,chan_i],self.y_centers_grid[:,:,chan_i],np.unwrap(np.angle(V_LC_real[:,:,f_index,chan_i]+1j*V_LC_im[:,:,f_index,chan_i])),cmap=cm.gnuplot2,norm=LogNorm())
@@ -494,9 +501,9 @@ class Beammap:
 
                     else:
 
-                        fig,ax=subplots(self.n_channels,2,figsize=(20,5*self.n_channels))
+                        fig,ax=subplots(self.V_LC_cross.shape[3],2,figsize=(20,5*self.V_LC_cross.shape[3]))
 
-                        for chan_i in range(self.n_channels):
+                        for chan_i in range(self.V_LC_cross.shape[3]):
 
                             ax[chan_i,0].pcolormesh(self.x_centers_grid[:,:,chan_i],self.y_centers_grid[:,:,chan_i],V_LC_real[:,:,f_index,chan_i],cmap=cm.gnuplot2,norm=LogNorm())
                             ax[chan_i,0].set_title('Beam: Channel {}, {:.2f} Hz'.format(chan_i,self.freq[f_index]))
