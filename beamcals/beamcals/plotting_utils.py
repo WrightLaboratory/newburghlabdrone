@@ -492,3 +492,18 @@ def plot_MBG_fits(filelist,cmp='gnuplot2',fitdir='/hirax/GBO_Analysis_Outputs/ma
             axs[5].set_xlabel('Frequency [MHz]')
             
     fig.show()
+
+
+
+def cm_to_discrete(cmap, number):
+    cmap = cm.get_cmap(cmap, number)    
+    hex_codes=[]
+    
+    
+    for i in range(cmap.N):
+        rgba = cmap(i)
+        # rgb2hex accepts rgb or rgba
+        hex_code=matplotlib.colors.rgb2hex(rgba)
+        hex_codes.append(hex_code)
+    
+    return hex_codes
