@@ -23,6 +23,7 @@ import pygeodesy
 import yaml
 from scipy.signal import square
 from scipy.stats import pearsonr
+from scipy.interpolate import interp1d
 
 ## Import packages from our own module:
 from beamcals import corr
@@ -193,7 +194,7 @@ class CONCAT:
         self.drone_yaw_interp[CORR_t_ind_lb:CORR_t_ind_ub]=np.interp(ds_CORR,ds_drone,DRONEDATCLASS.yaw[:])
         self.tstep=1e-9*np.nanmedian(np.diff(self.t))
 
-    def Extract_Source_Pulses(self,Period=0.4e6,Dutycycle=0.2e6,t_bounds=[0,-1],f_ind=[900]):
+    def Extract_Source_Pulses(self,Period=0.4e6,Dutycycle=0.2e6,t_bounds=[0,-1],f_ind=[900],minmaxpercents=[10.0,99.5]):
         ## Search for all three timing variables that must be loaded from config:
         if hasattr(self,"pulse_period")==True and hasattr(self,"pulse_dutycycle")==True and hasattr(self,"t_delta_pulse")==True:
             if self.traceback==True:
@@ -225,14 +226,16 @@ class CONCAT:
                 pass
             for i in range(self.n_channels):
                 ## If we use a mean subtracted data cut we can find where power exceeds zero to find signal
-                minsubdata=self.V[:,f_ind,i]-np.nanmin(self.V[:,f_ind,i])
-                normminsubdata=minsubdata/np.nanmax(minsubdata)
+                minsubdata=self.V[:,f_ind,i]-np.percentile(self.V[:,f_ind,i],minmaxpercents[0])
+                normminsubdata=minsubdata/np.percentile(minsubdata,minmaxpercents[1])
+                clipnormminsubdata=normminsubdata.clip(0,1)
                 t_full=np.array([(m-self.t_arr_datetime[0]).total_seconds() for m in self.t_arr_datetime[:]])
+                stepped_func=interp1d(self.t,clipnormminsubdata.flatten(),kind='previous',fill_value='extrapolate')
                 ## Loop over all time offsets in t_offset_dist to find maximum correlation between squarewave and data:
                 for j,t_offset in enumerate(t_offset_dist):
-                    shiftedswitch=np.interp(t_full,time_s+t_offset,switch)
+                    shiftedswitch=np.interp(time_s,time_s+t_offset,switch)
                     try:
-                        Pr_arr[i,j]=pearsonr(normminsubdata.flatten(),shiftedswitch.flatten())[0]
+                        Pr_arr[i,j]=pearsonr(stepped_func(time_s)[~np.isnan(stepped_func(time_s))],shiftedswitch[~np.isnan(stepped_func(time_s))])[0]
                     except ValueError:
                         Pr_arr[i,j]=np.NAN
                 if self.traceback==True:
@@ -250,7 +253,7 @@ class CONCAT:
                 except IndexError:
                     Pr_max_ind_per_channel[i]=np.NAN
                     Pr_max_t_0_per_channel[i]=np.NAN            
-            self.t_delta_pulse=np.nanmedian(Pr_max_t_0_per_channel)+(self.tstep*0.5) # 1/2 integration period
+            self.t_delta_pulse=np.nanmedian(Pr_max_t_0_per_channel)
             if self.traceback==True:
                 ax1.axvline(self.t_delta_pulse,label="t_offset with half-int-period")
                 ax1.axvline(self.t_delta_pulse-(self.tstep*0.5),c='r',label="t_offset without half-int-period")

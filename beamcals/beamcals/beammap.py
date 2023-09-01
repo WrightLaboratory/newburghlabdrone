@@ -387,7 +387,7 @@ class Beammap:
                 complex_beam = True
 
             # creates arrays for interpolated values (either linear or krig interpolation)       
-            if method == 'linear':
+            if method in ['linear','cubic']:
                 self.beam_linear_interp = np.zeros(V_LC.shape).astype(complex)
 
                 if complex_beam:
@@ -424,17 +424,17 @@ class Beammap:
                         if complex_beam==True:
                             V_LC_selected_im = V_LC_selected.imag
 
-                        if method=='linear':
+                        if method in ['linear','cubic']:
 
                             # linear interpolation
                             x_interp_grid,y_interp_grid=np.meshgrid(x_interp,y_interp,indexing='ij')
 
-                            beam_linear_interp_real = griddata((x_noNan,y_noNan), V_LC_selected_real, (x_interp_grid,y_interp_grid), method='linear')
+                            beam_linear_interp_real = griddata((x_noNan,y_noNan), V_LC_selected_real, (x_interp_grid,y_interp_grid), method=method)
 
                             if complex_beam:
 
                                 # for complex beam, interpolates real and imaginary components separately, calculates amplitude and phase
-                                beam_linear_interp_im = griddata((x_noNan,y_noNan), V_LC_selected_im, (x_interp_grid,y_interp_grid), method='linear')
+                                beam_linear_interp_im = griddata((x_noNan,y_noNan), V_LC_selected_im, (x_interp_grid,y_interp_grid), method=method)
                                 self.beam_linear_interp[:,:,f_index,chanind] = beam_linear_interp_real + 1.0j*beam_linear_interp_im
                                 self.beam_linear_interp_amp[:,:,f_index,chanind] = np.abs(self.beam_linear_interp[:,:,f_index,chanind])
                                 self.beam_linear_interp_phase[:,:,f_index,chanind] = np.angle(self.beam_linear_interp[:,:,f_index,chanind])
@@ -485,7 +485,7 @@ class Beammap:
                             ax[chan_i,1].pcolormesh(self.x_centers_grid[:,:,chan_i],self.y_centers_grid[:,:,chan_i],np.unwrap(np.angle(V_LC_real[:,:,f_index,chan_i]+1j*V_LC_im[:,:,f_index,chan_i])),cmap=cm.gnuplot2,norm=LogNorm())
                             ax[chan_i,1].set_title('Phase: Channel {}, {:.2f} Hz'.format(chan_i,self.freq[f_index]))
 
-                            if method=='linear':
+                            if method in ['linear','cubic']:
                                 ax[chan_i,2].pcolormesh(x_interp,y_interp,self.beam_linear_interp_amp[:,:,f_index,chan_i],cmap=cm.gnuplot2,norm=LogNorm())
                                 ax[chan_i,3].pcolormesh(x_interp,y_interp,self.beam_linear_interp_phase_unwrapped[:,:,f_index,chan_i],cmap=cm.gnuplot2)
 
@@ -509,7 +509,7 @@ class Beammap:
                             ax[chan_i,0].set_title('Beam: Channel {}, {:.2f} Hz'.format(chan_i,self.freq[f_index]))
                             ax[chan_i,1].set_title('Interpolated beam: Channel {}, {:.2f} Hz'.format(chan_i,self.freq[f_index]))
 
-                            if method=='linear':
+                            if method in ['linear','cubic']:
                                 ax[chan_i,1].pcolormesh(x_interp,y_interp,self.beam_linear_interp[:,:,f_index,chan_i],cmap=cm.gnuplot2,norm=LogNorm())
 
                             if method=='krig':
