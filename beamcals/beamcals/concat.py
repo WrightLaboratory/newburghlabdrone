@@ -206,7 +206,6 @@ class CONCAT:
                 pass
             concat_duration=int(np.ceil((self.t_arr_datetime[-1]-self.t_arr_datetime[0]).total_seconds()))
             time_s,time_dt,switch=tu.Pulsed_Data_Waveform(total_duration=concat_duration,period=self.pulse_period,duty_cycle_on=self.pulse_dutycycle)
-
         ## If we don't have any variables, then we haven't loaded a yaml yet... and must run the function:
         if hasattr(self,"t_delta_pulse")==False:
             ## Create Switch Signal
@@ -215,10 +214,11 @@ class CONCAT:
             concat_duration=int(np.ceil((self.t_arr_datetime[-1]-self.t_arr_datetime[0]).total_seconds()))
             time_s,time_dt,switch=tu.Pulsed_Data_Waveform(total_duration=concat_duration,period=self.pulse_period,duty_cycle_on=self.pulse_dutycycle)
             ## Create t_offset range (1 period) and Pearson_r vars:
-            t_offset_dist=np.linspace(-1.0*self.pulse_period*1e-6,0.0,1000)
-            Pr_arr=np.zeros((self.n_channels,t_offset_dist.shape[0]))
-            Pr_max_ind_per_channel=np.zeros(self.n_channels)
-            Pr_max_t_0_per_channel=np.zeros(self.n_channels)
+            t_offset_dist=np.arange(-1.0*self.pulse_period*1e-6,0.0,0.001)
+            Pr_arr=np.NaN*np.ones((self.n_channels,t_offset_dist.shape[0]))
+            Pr_max_ind_per_channel=np.NaN*np.ones(self.n_channels)
+            Pr_max_t_0_per_channel=np.NaN*np.ones(self.n_channels)
+            t_full=np.array([(m-self.t_arr_datetime[0]).total_seconds() for m in self.t_arr_datetime[:]])
             ## Loop over channels to find/plot a time offset solution with some clever fitting:
             if self.traceback==True:
                 fig1,ax1=subplots(nrows=1,ncols=1,figsize=(16,4))
@@ -229,13 +229,14 @@ class CONCAT:
                 minsubdata=self.V[:,f_ind,i]-np.percentile(self.V[:,f_ind,i],minmaxpercents[0])
                 normminsubdata=minsubdata/np.percentile(minsubdata,minmaxpercents[1])
                 clipnormminsubdata=normminsubdata.clip(0,1)
-                t_full=np.array([(m-self.t_arr_datetime[0]).total_seconds() for m in self.t_arr_datetime[:]])
-                stepped_func=interp1d(self.t,clipnormminsubdata.flatten(),kind='previous',fill_value='extrapolate')
+                stepped_func=interp1d(t_full,clipnormminsubdata,kind='previous',fill_value='extrapolate')
+                sniparr=np.where(time_s[np.where(time_s<=t_full[t_bounds[1]])[0]]>=t_full[t_bounds[0]])[0]
+                t_restrict=np.intersect1d(np.arange(len(time_s))[~np.isnan(stepped_func(time_s))],sniparr)
                 ## Loop over all time offsets in t_offset_dist to find maximum correlation between squarewave and data:
                 for j,t_offset in enumerate(t_offset_dist):
                     shiftedswitch=np.interp(time_s,time_s+t_offset,switch)
                     try:
-                        Pr_arr[i,j]=pearsonr(stepped_func(time_s)[~np.isnan(stepped_func(time_s))],shiftedswitch[~np.isnan(stepped_func(time_s))])[0]
+                        Pr_arr[i,j]=pearsonr(stepped_func(time_s[t_restrict]),shiftedswitch[t_restrict])[0]
                     except ValueError:
                         Pr_arr[i,j]=np.NAN
                 if self.traceback==True:
@@ -255,8 +256,7 @@ class CONCAT:
                     Pr_max_t_0_per_channel[i]=np.NAN            
             self.t_delta_pulse=np.nanmedian(Pr_max_t_0_per_channel)
             if self.traceback==True:
-                ax1.axvline(self.t_delta_pulse,label="t_offset with half-int-period")
-                ax1.axvline(self.t_delta_pulse-(self.tstep*0.5),c='r',label="t_offset without half-int-period")
+                ax1.axvline(self.t_delta_pulse,label="selected t_offset")
                 ax1.legend(loc=1)
                 tight_layout()
                 print("Maximum Pearson_R Correlations between data and square wave function:") 
@@ -271,7 +271,7 @@ class CONCAT:
             elif self.traceback==False:
                 pass
         ## Interpolate the switching function with the concat timestamps using either input or found t_delta_pulse:
-        t_for_interp_out=np.array([(m-self.t_arr_datetime[0]).total_seconds() for m in self.t_arr_datetime])
+        t_for_interp_out=np.array([(m-self.t_arr_datetime[0]).total_seconds() for m in self.t_arr_datetime[:]])
         t_for_interp_in=np.array([m.total_seconds() for m in time_dt])
         switch_interp_f=np.interp(t_for_interp_out,t_for_interp_in+self.t_delta_pulse,switch)
         self.switch_signal=switch
