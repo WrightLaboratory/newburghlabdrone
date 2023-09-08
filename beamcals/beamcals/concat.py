@@ -194,7 +194,7 @@ class CONCAT:
         self.drone_yaw_interp[CORR_t_ind_lb:CORR_t_ind_ub]=np.interp(ds_CORR,ds_drone,DRONEDATCLASS.yaw[:])
         self.tstep=1e-9*np.nanmedian(np.diff(self.t))
 
-    def Extract_Source_Pulses(self,Period=0.4e6,Dutycycle=0.2e6,t_bounds=[0,-1],f_ind=[900],minmaxpercents=[10.0,99.5]):
+    def Extract_Source_Pulses(self,Period=0.4e6,Dutycycle=0.2e6,t_bounds=[0,-1],f_ind=900,minmaxpercents=[10.0,99.5]):
         ## Search for all three timing variables that must be loaded from config:
         if hasattr(self,"pulse_period")==True and hasattr(self,"pulse_dutycycle")==True and hasattr(self,"t_delta_pulse")==True:
             if self.traceback==True:
