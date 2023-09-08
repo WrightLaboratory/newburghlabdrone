@@ -95,8 +95,8 @@ def Fit_Main_Beam(inputconcat,chans,freqs,theta_solve,coordbounds=[50.0,50.0,150
                 ## airy params:
                 rad0=25.0
                 ## 2dgauss params:
-                xsig0=6.0
-                ysig0=6.0
+                xsig0=10.0
+                ysig0=10.0
                 theta0=0.0
 
                 if theta_solve: # if this is true, solve for theta
