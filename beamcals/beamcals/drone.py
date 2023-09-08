@@ -151,6 +151,18 @@ class Drone_Data:
                     self.hmsl=np.array(drone_data["GPS(0):heightMSL"])
                 elif "GPS:heightMSL" in drone_data.columns:
                     self.hmsl=np.array(drone_data["GPS:heightMSL"])
+
+            ### Remove identical points
+            newll = np.concatenate((self.latitude,self.longitude)).reshape((len(self.latitude),2),order='F')
+            nrri = np.unique(newll, return_index=True,axis=0)[1]
+            #print(len(nrri),len(self.latitude))
+        
+            # redefine everything above:
+            self.latitude = self.latitude[nrri]
+            self.longitude = self.longitude[nrri]
+            self.hmsl = self.hmsl[nrri]
+
+
             ## Load columns that don't depend on the RTK data... 
             ## 8/24 patch: New version of datcon changes column headers to include ':C'
             if "IMU_ATTI(0):pitch" in drone_data.columns:
@@ -173,6 +185,27 @@ class Drone_Data:
             self.t_index=np.arange(len(self.t_arr_timestamp))
             self.t_arr_datetime=np.array(tu.interp_time(drone_data)["UTC"],dtype='object')
             self.altitude=self.hmsl-self.origin[2]
+
+
+            ### Remove identical points
+            newll = np.concatenate((self.latitude,self.longitude)).reshape((len(self.latitude),2),order='F')
+            nrri = np.unique(newll, return_index=True,axis=0)[1]
+            #print(len(nrri),len(self.latitude))
+        
+            # redefine everything above:
+            self.latitude = self.latitude[nrri]
+            self.longitude = self.longitude[nrri]
+            self.hmsl = self.hmsl[nrri]
+            self.pitch = self.pitch[nrri]
+            self.roll = self.roll[nrri]
+            self.yaw = self.yaw[nrri]
+            self.velocity = self.velocity[nrri]
+            self.t_arr_timestamp = self.t_arr_timestamp[nrri]
+            self.t_index = self.t_index[nrri]
+            self.t_arr_datetime = self.t_arr_datetime[nrri]
+            self.altitude = self.altitude[nrri]
+
+
         ## Define coordinate systems we will eventually want to use:
         print("  --> generating llh, geocentric cartesian, local cartesian, and local spherical coordinates.")
         self.coords_llh=np.NAN*np.ones((self.t_index.shape[0],3))     ## Lat,Lon,hmsl from drone/RTK
