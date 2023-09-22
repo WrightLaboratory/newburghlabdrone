@@ -23,6 +23,7 @@ import pygeodesy
 import yaml
 from scipy.signal import square
 from scipy.stats import pearsonr
+from scipy.interpolate import interp1d
 
 ## Import packages from our own module:
 from beamcals import corr
@@ -58,7 +59,10 @@ class CONCAT:
             print("  --> "+DRONEDATCLASS.FLYTAG)
             if self.save_traceback==True:
                 print('Creating directory for saving traceback and analysis outputs:')
-                tmpcorrdir=self.Data_Directory.split("_yale")[0].split("TONE_ACQ/")[1]
+                if 'TONE_ACQ' in self.Data_Directory:
+                    tmpcorrdir=self.Data_Directory.split("_yale")[0].split("TONE_ACQ/")[1]
+                elif 'NFandFF' in self.Data_Directory:
+                    tmpcorrdir=self.Data_Directory.split("_Suit")[0].split("NFandFF/")[1]
                 tmpdronedir=self.FLYTAG.split('.')[0]
                 tmpoutputdir=output_directory+'{}_{}'.format(tmpdronedir,tmpcorrdir)+'/'
                 if os.path.exists(tmpoutputdir)==False:                
@@ -68,7 +72,7 @@ class CONCAT:
                     suff=datetime.datetime.now().strftime("%Y%m%dT%H%M%S")
                     self.Output_Prefix='{}_{}_ver_{}'.format(tmpdronedir,tmpcorrdir,suff)
                     self.Output_Directory=output_directory+'{}_{}_ver_{}'.format(tmpdronedir,tmpcorrdir,suff)+'/'
-                os.mkdir(self.Output_Directory)
+                os.makedirs(self.Output_Directory)
                 print("  --> "+self.Output_Directory)
             if self.save_traceback==False:
                 print("  --> Traceback outputs will not be saved...")
@@ -83,7 +87,10 @@ class CONCAT:
         ## If we DO want to load previous config files, we enter this loop:
         if self.load_yaml==True:
             ## First we check if a config has previously been saved using these two data sets:
-            tmpcorrdir=self.Data_Directory.split("_yale")[0].split("TONE_ACQ/")[1]
+            if 'TONE_ACQ' in self.Data_Directory:
+                tmpcorrdir=self.Data_Directory.split("_yale")[0].split("TONE_ACQ/")[1]
+            elif 'NFandFF' in self.Data_Directory:
+                tmpcorrdir=self.Data_Directory.split("_Suit")[0].split("NFandFF/")[1]
             tmpdronedir=self.FLYTAG.split('.')[0]
             tmpconfigpath=self.Config_Directory+'config_{}_{}.yaml'.format(tmpdronedir,tmpcorrdir)
             self.yaml_exists=os.path.exists(tmpconfigpath)
@@ -187,7 +194,7 @@ class CONCAT:
         self.drone_yaw_interp[CORR_t_ind_lb:CORR_t_ind_ub]=np.interp(ds_CORR,ds_drone,DRONEDATCLASS.yaw[:])
         self.tstep=1e-9*np.nanmedian(np.diff(self.t))
 
-    def Extract_Source_Pulses(self,Period=0.4e6,Dutycycle=0.2e6,t_bounds=[0,-1],f_ind=[900]):
+    def Extract_Source_Pulses(self,Period=0.4e6,Dutycycle=0.2e6,t_bounds=[0,-1],f_ind=900,minmaxpercents=[10.0,99.5]):
         ## Search for all three timing variables that must be loaded from config:
         if hasattr(self,"pulse_period")==True and hasattr(self,"pulse_dutycycle")==True and hasattr(self,"t_delta_pulse")==True:
             if self.traceback==True:
@@ -199,7 +206,6 @@ class CONCAT:
                 pass
             concat_duration=int(np.ceil((self.t_arr_datetime[-1]-self.t_arr_datetime[0]).total_seconds()))
             time_s,time_dt,switch=tu.Pulsed_Data_Waveform(total_duration=concat_duration,period=self.pulse_period,duty_cycle_on=self.pulse_dutycycle)
-
         ## If we don't have any variables, then we haven't loaded a yaml yet... and must run the function:
         if hasattr(self,"t_delta_pulse")==False:
             ## Create Switch Signal
@@ -208,10 +214,11 @@ class CONCAT:
             concat_duration=int(np.ceil((self.t_arr_datetime[-1]-self.t_arr_datetime[0]).total_seconds()))
             time_s,time_dt,switch=tu.Pulsed_Data_Waveform(total_duration=concat_duration,period=self.pulse_period,duty_cycle_on=self.pulse_dutycycle)
             ## Create t_offset range (1 period) and Pearson_r vars:
-            t_offset_dist=np.linspace(-1.0*self.pulse_period*1e-6,0.0,1000)
-            Pr_arr=np.zeros((self.n_channels,t_offset_dist.shape[0]))
-            Pr_max_ind_per_channel=np.zeros(self.n_channels)
-            Pr_max_t_0_per_channel=np.zeros(self.n_channels)
+            t_offset_dist=np.arange(-1.0*self.pulse_period*1e-6,0.0,0.001)
+            Pr_arr=np.NaN*np.ones((self.n_channels,t_offset_dist.shape[0]))
+            Pr_max_ind_per_channel=np.NaN*np.ones(self.n_channels)
+            Pr_max_t_0_per_channel=np.NaN*np.ones(self.n_channels)
+            t_full=np.array([(m-self.t_arr_datetime[0]).total_seconds() for m in self.t_arr_datetime[:]])
             ## Loop over channels to find/plot a time offset solution with some clever fitting:
             if self.traceback==True:
                 fig1,ax1=subplots(nrows=1,ncols=1,figsize=(16,4))
@@ -219,14 +226,17 @@ class CONCAT:
                 pass
             for i in range(self.n_channels):
                 ## If we use a mean subtracted data cut we can find where power exceeds zero to find signal
-                minsubdata=self.V[:,f_ind,i]-np.nanmin(self.V[:,f_ind,i])
-                normminsubdata=minsubdata/np.nanmax(minsubdata)
-                t_full=np.array([(m-self.t_arr_datetime[0]).total_seconds() for m in self.t_arr_datetime[:]])
+                minsubdata=self.V[:,f_ind,i]-np.percentile(self.V[:,f_ind,i],minmaxpercents[0])
+                normminsubdata=minsubdata/np.percentile(minsubdata,minmaxpercents[1])
+                clipnormminsubdata=normminsubdata.clip(0,1)
+                stepped_func=interp1d(t_full,clipnormminsubdata,kind='previous',fill_value='extrapolate')
+                sniparr=np.where(time_s[np.where(time_s<=t_full[t_bounds[1]])[0]]>=t_full[t_bounds[0]])[0]
+                t_restrict=np.intersect1d(np.arange(len(time_s))[~np.isnan(stepped_func(time_s))],sniparr)
                 ## Loop over all time offsets in t_offset_dist to find maximum correlation between squarewave and data:
                 for j,t_offset in enumerate(t_offset_dist):
-                    shiftedswitch=np.interp(t_full,time_s+t_offset,switch)
+                    shiftedswitch=np.interp(time_s,time_s+t_offset,switch)
                     try:
-                        Pr_arr[i,j]=pearsonr(normminsubdata.flatten(),shiftedswitch.flatten())[0]
+                        Pr_arr[i,j]=pearsonr(stepped_func(time_s[t_restrict]),shiftedswitch[t_restrict])[0]
                     except ValueError:
                         Pr_arr[i,j]=np.NAN
                 if self.traceback==True:
@@ -244,10 +254,9 @@ class CONCAT:
                 except IndexError:
                     Pr_max_ind_per_channel[i]=np.NAN
                     Pr_max_t_0_per_channel[i]=np.NAN            
-            self.t_delta_pulse=np.nanmedian(Pr_max_t_0_per_channel)+(self.tstep*0.5) # 1/2 integration period
+            self.t_delta_pulse=np.nanmedian(Pr_max_t_0_per_channel)
             if self.traceback==True:
-                ax1.axvline(self.t_delta_pulse,label="t_offset with half-int-period")
-                ax1.axvline(self.t_delta_pulse-(self.tstep*0.5),c='r',label="t_offset without half-int-period")
+                ax1.axvline(self.t_delta_pulse,label="selected t_offset")
                 ax1.legend(loc=1)
                 tight_layout()
                 print("Maximum Pearson_R Correlations between data and square wave function:") 
@@ -262,7 +271,7 @@ class CONCAT:
             elif self.traceback==False:
                 pass
         ## Interpolate the switching function with the concat timestamps using either input or found t_delta_pulse:
-        t_for_interp_out=np.array([(m-self.t_arr_datetime[0]).total_seconds() for m in self.t_arr_datetime])
+        t_for_interp_out=np.array([(m-self.t_arr_datetime[0]).total_seconds() for m in self.t_arr_datetime[:]])
         t_for_interp_in=np.array([m.total_seconds() for m in time_dt])
         switch_interp_f=np.interp(t_for_interp_out,t_for_interp_in+self.t_delta_pulse,switch)
         self.switch_signal=switch
@@ -579,12 +588,12 @@ class CONCAT:
         if self.traceback==False:
             pass
     
-    def Main_Beam_Fitting(self,fit_param_directory='/hirax/GBO_Analysis_Outputs/main_beam_fits/',freqs=np.arange(1024),theta_solve=False,FMB_ampbound=0.999,Vargs='None'):
+    def Main_Beam_Fitting(self,fit_param_directory='/hirax/GBO_Analysis_Outputs/main_beam_fits/',freqs=np.arange(1024),theta_solve=False,FMB_ampbound=0.999,coordbounds=[50.0,50.0,150.0],Vargs='None'):
         if self.traceback==True:
             print('Performing 2DGauss and Airy fits for [{}]chans x [{}]freqs:'.format(self.n_channels,len(freqs)))
         if self.traceback==False:
             pass
-        A_popt,A_PR,G_popt,G_PR=fu.Fit_Main_Beam(inputconcat=self,chans=range(self.n_channels),freqs=freqs,theta_solve=theta_solve,ampbound=FMB_ampbound,Vargs=Vargs)
+        A_popt,A_PR,G_popt,G_PR=fu.Fit_Main_Beam(inputconcat=self,chans=range(self.n_channels),freqs=freqs,coordbounds=coordbounds,theta_solve=theta_solve,ampbound=FMB_ampbound,Vargs=Vargs)
         self.A_popt=A_popt
         self.A_PR=A_PR
         self.G_popt=G_popt
