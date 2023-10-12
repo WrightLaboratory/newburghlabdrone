@@ -310,14 +310,14 @@ class CONCAT:
         if self.traceback==False:
             pass
         
-    def Perform_Background_Subtraction(self,window_size=5,f_ind=900,plot_channels=[0]):
+    def Perform_Background_Subtraction(self,window_size=5):
         ## BACKGROUND SUBTRACTED SPECTRA: ##
         if self.traceback==True:
             print("Calculating background spectra from indices where the noise source is off.")
         if self.traceback==False:
             pass
         self.V_bg=np.zeros(self.V.shape)
-        self.V_bgsub0=np.zeros(self.V.shape)
+        self.V_bgsub=np.zeros(self.V.shape)
         if self.crossmap!=None:
             self.V_cross_bg=np.zeros(self.V_cross.shape).astype(complex)
             self.V_cross_bgsub=np.zeros(self.V_cross.shape).astype(complex)
@@ -334,8 +334,7 @@ class CONCAT:
                 self.V_bg[k,:,:]=np.nanmean(self.V[t_window,:,:],axis=0)
                 if self.crossmap!=None:
                     self.V_cross_bg[k,:,:]=np.nanmean(self.V_cross[t_window,:,:],axis=0)
-        self.V_bgsub0=self.V-self.V_bg
-        self.V_bgsub=self.Distance_Compensation(f_ind=f_ind,plot_channels=plot_channels)
+        self.V_bgsub=self.V-self.V_bg
         if self.crossmap!=None:
             self.V_cross_bgsub=self.V_cross-self.V_cross_bg
         if self.traceback==True:
@@ -609,10 +608,10 @@ class CONCAT:
             pass
         
     def Distance_Compensation(self,f_ind=900,plot_channels=[0]):
-        if hasattr(self,'V_bgsub0'):
+        if hasattr(self,'V_bgsub'):
             if hasattr(self,'drone_xyz_per_dish_interp'):
                 if self.traceback==True:
-                    print('  --> Applying correction to V_bgsub0 using concat.Distance_Compensation() Function:')
+                    print('Applying correction to V_bgsub using concat.Distance_Compensation() Function:')
         r2coeffmatrix=np.NaN*np.ones((int(self.V.shape[0]),1,int(self.V.shape[2])))
         rmin=np.zeros(self.n_channels).astype(int)
         r0=np.zeros(self.n_channels)
@@ -621,8 +620,8 @@ class CONCAT:
             rmin[i]=int(np.where(rdist==np.nanmin(rdist))[0][0])
             r0[i]=rdist[rmin[i]]
             r2coeffmatrix[:,:,i]=((rdist**2.0)/(r0[i]**2.0)).reshape((len(rdist),1))
-        ## Multiply V_bgsub0 by the distance compensation matrix 
-        compensated_V_bgsub0=r2coeffmatrix*self.V_bgsub0
+        ## Multiply V_bgsub by the distance compensation matrix 
+        compensated_V_bgsub=r2coeffmatrix*self.V_bgsub
         ## Plot with the traceback:
         if self.traceback==True:
             fig,[[ax1,ax2],[ax3,ax4],[ax5,ax6]]=subplots(nrows=3,ncols=2,figsize=(18,12))
@@ -636,18 +635,18 @@ class CONCAT:
                 ax2.plot(self.drone_xyz_per_dish_interp[k,:,1],r2coeffmatrix[:,0,k],'.',alpha=0.05,label='Channel {}'.format(k))
                 ax2.plot(self.drone_xyz_per_dish_interp[k,mininds[k],1],r2coeffmatrix[mininds[k],0,k],'rx')         
                 ## Plot before/after spectra vs x
-                ax3.plot(self.drone_xyz_per_dish_interp[k,:,0][self.inds_on],self.V_bgsub0[:,f_ind,k][self.inds_on],'.',alpha=0.25,label='Ch{} Before'.format(k))
-                ax3.plot(self.drone_xyz_per_dish_interp[k,:,0][self.inds_on],compensated_V_bgsub0[:,f_ind,k][self.inds_on],'.',alpha=0.25,label='Ch{} After'.format(k))
+                ax3.plot(self.drone_xyz_per_dish_interp[k,:,0][self.inds_on],self.V_bgsub[:,f_ind,k][self.inds_on],'.',alpha=0.25,label='Ch{} Before'.format(k))
+                ax3.plot(self.drone_xyz_per_dish_interp[k,:,0][self.inds_on],compensated_V_bgsub[:,f_ind,k][self.inds_on],'.',alpha=0.25,label='Ch{} After'.format(k))
                 ax3.axvline(self.drone_xyz_per_dish_interp[k,mininds[k],0])
-                ax4.plot(self.drone_xyz_per_dish_interp[k,:,0][self.inds_on],self.V_bgsub0[:,f_ind,k+1][self.inds_on],'.',alpha=0.25,label='Ch{} Before'.format(k+1))
-                ax4.plot(self.drone_xyz_per_dish_interp[k,:,0][self.inds_on],compensated_V_bgsub0[:,f_ind,k+1][self.inds_on],'.',alpha=0.25,label='Ch{} After'.format(k+1))
+                ax4.plot(self.drone_xyz_per_dish_interp[k,:,0][self.inds_on],self.V_bgsub[:,f_ind,k+1][self.inds_on],'.',alpha=0.25,label='Ch{} Before'.format(k+1))
+                ax4.plot(self.drone_xyz_per_dish_interp[k,:,0][self.inds_on],compensated_V_bgsub[:,f_ind,k+1][self.inds_on],'.',alpha=0.25,label='Ch{} After'.format(k+1))
                 ax4.axvline(self.drone_xyz_per_dish_interp[k,mininds[k],0])
                 ## Plot before/after spectra vs y
-                ax5.plot(self.drone_xyz_per_dish_interp[k,:,1][self.inds_on],self.V_bgsub0[:,f_ind,k][self.inds_on],'.',alpha=0.25,label='Ch{} Before'.format(k))
-                ax5.plot(self.drone_xyz_per_dish_interp[k,:,1][self.inds_on],compensated_V_bgsub0[:,f_ind,k][self.inds_on],'.',alpha=0.25,label='Ch{} After'.format(k))
+                ax5.plot(self.drone_xyz_per_dish_interp[k,:,1][self.inds_on],self.V_bgsub[:,f_ind,k][self.inds_on],'.',alpha=0.25,label='Ch{} Before'.format(k))
+                ax5.plot(self.drone_xyz_per_dish_interp[k,:,1][self.inds_on],compensated_V_bgsub[:,f_ind,k][self.inds_on],'.',alpha=0.25,label='Ch{} After'.format(k))
                 ax5.axvline(self.drone_xyz_per_dish_interp[k,mininds[k],1])
-                ax6.plot(self.drone_xyz_per_dish_interp[k,:,1][self.inds_on],self.V_bgsub0[:,f_ind,k+1][self.inds_on],'.',alpha=0.25,label='Ch{} Before'.format(k+1))
-                ax6.plot(self.drone_xyz_per_dish_interp[k,:,1][self.inds_on],compensated_V_bgsub0[:,f_ind,k+1][self.inds_on],'.',alpha=0.25,label='Ch{} After'.format(k+1))
+                ax6.plot(self.drone_xyz_per_dish_interp[k,:,1][self.inds_on],self.V_bgsub[:,f_ind,k+1][self.inds_on],'.',alpha=0.25,label='Ch{} Before'.format(k+1))
+                ax6.plot(self.drone_xyz_per_dish_interp[k,:,1][self.inds_on],compensated_V_bgsub[:,f_ind,k+1][self.inds_on],'.',alpha=0.25,label='Ch{} After'.format(k+1))
                 ax6.axvline(self.drone_xyz_per_dish_interp[k,mininds[k],1])
             for ax in [ax1,ax2]:
                 ax.plot([],[],'rx',label='minima')
@@ -665,6 +664,7 @@ class CONCAT:
                 print('  --> Saving output plot.')
                 savefig(self.Output_Directory+self.Output_Prefix+"_Distance_Compensation_Verification.png")
             ## Redefine variable V_bgsub:
-            print('    --> Complete.')
-            return compensated_V_bgsub0
+            print('  --> Complete.')
+            del self.V_bgsub
+            self.V_bgsub=compensated_V_bgsub
 
