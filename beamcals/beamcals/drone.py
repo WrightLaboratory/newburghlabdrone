@@ -152,17 +152,6 @@ class Drone_Data:
                 elif "GPS:heightMSL" in drone_data.columns:
                     self.hmsl=np.array(drone_data["GPS:heightMSL"])
 
-            ### Remove identical points
-            newll = np.concatenate((self.latitude,self.longitude)).reshape((len(self.latitude),2),order='F')
-            nrri = np.unique(newll, return_index=True,axis=0)[1]
-            #print(len(nrri),len(self.latitude))
-        
-            # redefine everything above:
-            self.latitude = self.latitude[nrri]
-            self.longitude = self.longitude[nrri]
-            self.hmsl = self.hmsl[nrri]
-
-
             ## Load columns that don't depend on the RTK data... 
             ## 8/24 patch: New version of datcon changes column headers to include ':C'
             if "IMU_ATTI(0):pitch" in drone_data.columns:
@@ -182,17 +171,17 @@ class Drone_Data:
             elif "IMU_ATTI(0):velComposite:C" in drone_data.columns:
                 self.velocity=np.array(drone_data["IMU_ATTI(0):velComposite:C"])
             self.t_arr_timestamp=np.array(drone_data["GPS:dateTimeStamp"])
-            self.t_index=np.arange(len(self.t_arr_timestamp))
+            #self.t_index=np.arange(len(self.t_arr_timestamp))
             self.t_arr_datetime=np.array(tu.interp_time(drone_data)["UTC"],dtype='object')
             self.altitude=self.hmsl-self.origin[2]
 
 
-            ### Remove identical points
+            #### Remove identical points
             newll = np.concatenate((self.latitude,self.longitude)).reshape((len(self.latitude),2),order='F')
-            nrri = np.unique(newll, return_index=True,axis=0)[1]
+            nrri = np.sort(np.unique(newll, return_index=True,axis=0)[1])
             #print(len(nrri),len(self.latitude))
         
-            # redefine everything above:
+            ## redefine everything above:
             self.latitude = self.latitude[nrri]
             self.longitude = self.longitude[nrri]
             self.hmsl = self.hmsl[nrri]
@@ -201,7 +190,7 @@ class Drone_Data:
             self.yaw = self.yaw[nrri]
             self.velocity = self.velocity[nrri]
             self.t_arr_timestamp = self.t_arr_timestamp[nrri]
-            self.t_index = self.t_index[nrri]
+            self.t_index = np.arange(len(self.t_arr_timestamp))
             self.t_arr_datetime = self.t_arr_datetime[nrri]
             self.altitude = self.altitude[nrri]
 
@@ -217,7 +206,7 @@ class Drone_Data:
             try:
                 ## Create LatLon point for each recorded drone position:
                 p_t=pygeodesy.ellipsoidalNvector.LatLon(self.latitude[i],lon=self.longitude[i],height=self.hmsl[i])
-            except RangeError:
+            except:
                 print("    --> RangeError for index{}".format(i))
             ## Assign llh, xyz, xyz_prime, rpt_prime coordinates, pointwise:
             self.coords_llh[i]=p_t.to3llh()
