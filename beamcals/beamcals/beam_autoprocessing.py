@@ -263,11 +263,14 @@ class Beammap_forautoprocessing:
                                 
                                                 
             if self.normalization=='Gauss_wcorr':
-                # get normalization
-                gcorrfile=glob.glob(self.ampcorr_directory+'*'+self.FLYNUM+'*.pkl')[0]
-                with open(gcorrfile,'rb') as acf:
-                    gcorr_norm=pickle.load(acf)
-                Vvals *= gcorr_norm[self.faxis,:][np.newaxis,:,:]
+
+                if self.FLYNUM!='618' and self.FLYNUM!='620':
+                   # get normalization
+                   gcorrfile=glob.glob(self.ampcorr_directory+'*'+self.FLYNUM+'*.pkl')[0]
+                   with open(gcorrfile,'rb') as acf:
+                       gcorr_norm=pickle.load(acf)
+                   Vvals *= gcorr_norm[0,self.faxis,:][np.newaxis,:,:]
+                else: ''
                             
             ## create centroid-corrected per channel and frequency drone coordinate maps on a per-concat basis:
             tmpcoords=np.repeat(ccc.drone_xyz_per_dish_interp[:,:,:,np.newaxis],self.n_freqs,axis=3)
@@ -312,7 +315,7 @@ class Beammap_forautoprocessing:
                 gcorrfile=glob.glob(self.ampcorr_directory+'*'+flynum+'*.pkl')[0]
                 with open(gcorrfile,'rb') as acf:
                     gcorr_norm=pickle.load(acf)
-                Vvals *= gcorr_norm[self.faxis,:][np.newaxis,:,:]
+                Vvals *= gcorr_norm[0,self.faxis,:][np.newaxis,:,:]
                             
             ## create centroid-corrected per channel and frequency drone coordinate maps on a per-concat basis:
             tmpcoords=np.repeat(ccc.drone_xyz_per_dish_interp[:,:,:,np.newaxis],self.n_freqs,axis=3)
