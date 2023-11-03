@@ -606,3 +606,65 @@ class CONCAT:
                 print('  --> {}'.format(self.Output_Prefix+'_2dGauss_and_Airy_Params.npz'))
         if self.traceback==False:
             pass
+        
+    def Distance_Compensation(self,f_ind=900,plot_channels=[0]):
+        if hasattr(self,'V_bgsub'):
+            if hasattr(self,'drone_xyz_per_dish_interp'):
+                if self.traceback==True:
+                    print('Applying correction to V_bgsub using concat.Distance_Compensation() Function:')
+        r2coeffmatrix=np.NaN*np.ones((int(self.V.shape[0]),1,int(self.V.shape[2])))
+        rmin=np.zeros(self.n_channels).astype(int)
+        r0=np.zeros(self.n_channels)
+        for i in range(self.n_channels):
+            rdist=np.abs(np.sqrt(((self.drone_xyz_per_dish_interp[i,:,0]**2.0)+(self.drone_xyz_per_dish_interp[i,:,1]**2.0)+(self.drone_xyz_per_dish_interp[i,:,2]**2.0))))
+            rmin[i]=int(np.where(rdist==np.nanmin(rdist))[0][0])
+            r0[i]=rdist[rmin[i]]
+            r2coeffmatrix[:,:,i]=((rdist**2.0)/(r0[i]**2.0)).reshape((len(rdist),1))
+        ## Multiply V_bgsub by the distance compensation matrix 
+        compensated_V_bgsub=r2coeffmatrix*self.V_bgsub
+        ## Plot with the traceback:
+        if self.traceback==True:
+            fig,[[ax1,ax2],[ax3,ax4],[ax5,ax6]]=subplots(nrows=3,ncols=2,figsize=(18,12))
+            mininds=np.zeros(self.n_channels).astype(int)
+            for k in plot_channels:
+                ## Grab minima for plotting
+                mininds[k]=np.where(r2coeffmatrix[:,0,k]==np.nanmin(r2coeffmatrix[:,0,k]))[0][0]
+                ## Plot r2coeffmatrix vs position
+                ax1.plot(self.drone_xyz_per_dish_interp[k,:,0],r2coeffmatrix[:,0,k],'.',alpha=0.05,label='Channel {}'.format(k))
+                ax1.plot(self.drone_xyz_per_dish_interp[k,mininds[k],0],r2coeffmatrix[mininds[k],0,k],'rx')
+                ax2.plot(self.drone_xyz_per_dish_interp[k,:,1],r2coeffmatrix[:,0,k],'.',alpha=0.05,label='Channel {}'.format(k))
+                ax2.plot(self.drone_xyz_per_dish_interp[k,mininds[k],1],r2coeffmatrix[mininds[k],0,k],'rx')         
+                ## Plot before/after spectra vs x
+                ax3.plot(self.drone_xyz_per_dish_interp[k,:,0][self.inds_on],self.V_bgsub[:,f_ind,k][self.inds_on],'.',alpha=0.25,label='Ch{} Before'.format(k))
+                ax3.plot(self.drone_xyz_per_dish_interp[k,:,0][self.inds_on],compensated_V_bgsub[:,f_ind,k][self.inds_on],'.',alpha=0.25,label='Ch{} After'.format(k))
+                ax3.axvline(self.drone_xyz_per_dish_interp[k,mininds[k],0])
+                ax4.plot(self.drone_xyz_per_dish_interp[k,:,0][self.inds_on],self.V_bgsub[:,f_ind,k+1][self.inds_on],'.',alpha=0.25,label='Ch{} Before'.format(k+1))
+                ax4.plot(self.drone_xyz_per_dish_interp[k,:,0][self.inds_on],compensated_V_bgsub[:,f_ind,k+1][self.inds_on],'.',alpha=0.25,label='Ch{} After'.format(k+1))
+                ax4.axvline(self.drone_xyz_per_dish_interp[k,mininds[k],0])
+                ## Plot before/after spectra vs y
+                ax5.plot(self.drone_xyz_per_dish_interp[k,:,1][self.inds_on],self.V_bgsub[:,f_ind,k][self.inds_on],'.',alpha=0.25,label='Ch{} Before'.format(k))
+                ax5.plot(self.drone_xyz_per_dish_interp[k,:,1][self.inds_on],compensated_V_bgsub[:,f_ind,k][self.inds_on],'.',alpha=0.25,label='Ch{} After'.format(k))
+                ax5.axvline(self.drone_xyz_per_dish_interp[k,mininds[k],1])
+                ax6.plot(self.drone_xyz_per_dish_interp[k,:,1][self.inds_on],self.V_bgsub[:,f_ind,k+1][self.inds_on],'.',alpha=0.25,label='Ch{} Before'.format(k+1))
+                ax6.plot(self.drone_xyz_per_dish_interp[k,:,1][self.inds_on],compensated_V_bgsub[:,f_ind,k+1][self.inds_on],'.',alpha=0.25,label='Ch{} After'.format(k+1))
+                ax6.axvline(self.drone_xyz_per_dish_interp[k,mininds[k],1])
+            for ax in [ax1,ax2]:
+                ax.plot([],[],'rx',label='minima')
+            titles=['Distance_Compensation Matrix','Distance_Compensation Matrix','Xpol','Ypol','Xpol','Ypol']
+            xlabels=['x','y','x','x','y','y']
+            ylabels=['$DCM[r]$','$DCM[r]$','$ADU^2$','$ADU^2$','$ADU^2$','$ADU^2$']
+            for ai,ax in enumerate([ax1,ax2,ax3,ax4,ax5,ax6]):
+                ax.set_title(titles[ai])
+                ax.set_xlabel(xlabels[ai])
+                ax.set_ylabel(ylabels[ai])
+                ax.legend(loc=1)
+            tight_layout()
+            ## Save figure?
+            if self.save_traceback==True:
+                print('  --> Saving output plot.')
+                savefig(self.Output_Directory+self.Output_Prefix+"_Distance_Compensation_Verification.png")
+            ## Redefine variable V_bgsub:
+            print('  --> Complete.')
+            del self.V_bgsub
+            self.V_bgsub=compensated_V_bgsub
+
