@@ -80,21 +80,21 @@ amparr=np.sort(os.listdir(ampdir))
 Npolflights = ['618','619','625','646','647','533','536']
 Epolflights = ['620','648','649','535']
 
-for find in good_freqs[::10]:
+for find in good_freqs:
     print('Working on Frequency: ',find,freqs[find])
 
     flights = Npolflights
     concytest=[glob.glob(pckldir+'*'+fly+'*')[0] for fly in flights]    
 
     beam=ba.Beammap_forautoprocessing(concatlist=concytest,
-                 normalization='Gauss_wcorr',operation='std',mask=True,Xargs=[-1*sz,sz,1.0],
-                 Yargs=[-1*sz,sz,1.0],Fargs=[find,find+1,1])
+                 normalization='Gauss_wcorr',operation='std',mask=True,Xargs=[-1*sz,sz,2.5],
+                 Yargs=[-1*sz,sz,2.5],Fargs=[find,find+1,1])
 
     thingy = rc.Smallify_comap(beam)
     for j,fstr in enumerate(documents['flight_info']['flights']):
         if beam.FLYNUM in fstr:
             copoldir=documents['flight_info']['pols'][j]
-    write_pickle = beamdir+'Beamcoadd_pol_'+copoldir+'_freq_'+str(find)+'_halfspace.pkl'
+    write_pickle = beamdir+'Beamcoadd_pol_'+copoldir+'_freq_'+str(find)+'.pkl'
 
     print(write_pickle)
     with open(write_pickle, 'wb') as outp:
@@ -106,17 +106,18 @@ for find in good_freqs[::10]:
     concytest=[glob.glob(pckldir+'*'+fly+'*')[0] for fly in flights]    
 
     beam=ba.Beammap_forautoprocessing(concatlist=concytest,
-                 normalization='Gauss_wcorr',operation='std',mask=True,Xargs=[-1*sz,sz,1.0],
-                 Yargs=[-1*sz,sz,1.0],Fargs=[find,find+1,1])
+                 normalization='Gauss_wcorr',operation='std',mask=True,Xargs=[-1*sz,sz,2.5],
+                 Yargs=[-1*sz,sz,2.5],Fargs=[find,find+1,1])
 
     thingy = rc.Smallify_comap(beam)
     for j,fstr in enumerate(documents['flight_info']['flights']):
         if beam.FLYNUM in fstr:
             copoldir=documents['flight_info']['pols'][j]
     print(copoldir)
-    write_pickle = beamdir+'Beamcoadd_pol_'+copoldir+'_freq_'+str(find)+'_halfspace.pkl'
+    write_pickle = beamdir+'Beamcoadd_pol_'+copoldir+'_freq_'+str(find)+'.pkl'
 
     print(write_pickle)
     with open(write_pickle, 'wb') as outp:
         pickle.dump(thingy, outp, pickle.HIGHEST_PROTOCOL)
     print('DONE')
+print('For loop ended successfully')
