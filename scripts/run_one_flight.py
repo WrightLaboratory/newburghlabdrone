@@ -22,7 +22,7 @@ f = args.flight_iterator
 print(f)
 
 gbosite=site.site('../beamcals/beamcals/sites/GBO_config.npz')
-yamlfile = '/home/ln267/newburghlabdrone/analysis/GBO_flights_forscripts.yaml'
+yamlfile = '/hirax/GBO_Analysis_Outputs/GBO_flights_forscripts.yaml'
 config_directory="/hirax/GBO_Analysis_Outputs/concat_config_files/"
 
 # open yamlfile of flights and read in relevant info
@@ -69,6 +69,7 @@ concattest0825.Synchronization_Function(inputcorr=corrtest0825,inputdrone=dronet
                                         coarse_params=[-5.0,5.0,0.2],
                                         FMB_coordbounds=[30.0,30.0,150.0],
                                         FMB_ampbound=0.999)
+concattest0825.Distance_Compensation(f_ind=900,plot_channels=[0])
 concattest0825.Export_yaml()   
 concattest0825.Main_Beam_Fitting(fit_param_directory='/hirax/GBO_Analysis_Outputs/main_beam_fits/',
                                  FMB_ampbound=0.999,

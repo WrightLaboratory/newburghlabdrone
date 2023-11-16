@@ -62,7 +62,7 @@ ymldir = '/hirax/GBO_Analysis_Outputs/concat_config_files/'
 pckldir = '/hirax/GBO_Analysis_Outputs/flight_pickles/'
 
 ## Read in Yaml file for info per flight:
-with open('/home/ln267/newburghlabdrone/analysis/GBO_flights_forscripts.yaml', 'r') as fff:
+with open('GBO_flights_forscripts.yaml', 'r') as fff:
     documents = yaml.safe_load(fff)
 flights = documents["flight_info"]["flights"]
 N_pols = documents["flag_info"]["N_pols"]
