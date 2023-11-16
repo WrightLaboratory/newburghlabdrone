@@ -26,4 +26,12 @@ for fly in flights:
         print(pklfile)
         with open(pklfile, 'wb') as outp:
             pickle.dump(ampls, outp, pickle.HIGHEST_PROTOCOL)
+
+    else:
+	ampls = 1.0*np.zeros([4,1024,16])
+	pklfile = ampdir+'FLY'+str(fly)+'_Corrected_amplitudes.pkl'
+        print(pklfile)
+        with open(pklfile, 'wb') as outp:
+            pickle.dump(ampls, outp, pickle.HIGHEST_PROTOCOL)
+
 print('DONE')
