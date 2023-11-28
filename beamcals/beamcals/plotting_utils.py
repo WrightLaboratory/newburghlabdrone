@@ -507,3 +507,19 @@ def cm_to_discrete(cmap, number):
         hex_codes.append(hex_code)
     
     return hex_codes
+
+
+def get_polar_slice(theta,phi,val=0.0): # assume val in angle
+    
+    tol = abs(theta[1,0] - theta[0,0])/1.5
+    N = len(theta[:,0]) #figure out the importance of this 
+    #ok = True
+    #while(ok):
+    sliceIndex1 = np.where(
+            (theta[:,0] < (val + tol)) & 
+            (theta[:,0] > (val - tol)))[0][0]
+    sliceIndex2 = np.where(
+            (theta[:,0] < (np.pi + val + tol)) & 
+            (theta[:,0] > (np.pi + val - tol)))[0][0]
+    return sliceIndex1, sliceIndex2
+
