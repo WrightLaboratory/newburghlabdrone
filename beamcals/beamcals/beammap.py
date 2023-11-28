@@ -36,6 +36,17 @@ from scipy.stats import binned_statistic_2d
 from scipy.interpolate import griddata
 import pykrige.kriging_tools as kt
 from pykrige.ok import OrdinaryKriging
+## Import packages from our own module:
+from beamcals import corr
+from beamcals import drone
+from beamcals import bicolog
+from beamcals import concat
+from beamcals import beammap
+import beamcals.plotting_utils as pu
+import beamcals.fitting_utils as fu
+import beamcals.geometry_utils as gu
+import beamcals.time_utils as tu
+from beamcals.sites import site
 
 ## Class for position-space sorting/averaging of beammap flight data, from time domain data:
 #defines coordinate vector from xmax to xmin spaced roughly by xres:
