@@ -494,16 +494,14 @@ def plot_MBG_fits(filelist,cmp='gnuplot2',fitdir='/hirax/GBO_Analysis_Outputs/ma
     fig.show()
 
 
-
 def cm_to_discrete(cmap, number):
     # this takes in a colormap and a number of colors you want from it, and returns
-    # hex codes associated with a discrete colormap, as a vector
-    cmap = cm.get_cmap(cmap, number)    
+    # hex codes associated with a discrete colormap, as a vector    
     hex_codes=[]
     
-    
-    for i in range(cmap.N):
-        rgba = cmap(i)
+    for i in range(number):
+        n = int(i * cmap.N / number)
+        rgba = cmap(n)
         # rgb2hex accepts rgb or rgba
         hex_code=matplotlib.colors.rgb2hex(rgba)
         hex_codes.append(hex_code)
