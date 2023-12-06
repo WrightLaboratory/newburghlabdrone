@@ -58,7 +58,7 @@ class Beammap:
     def __init__(self,concatlist=[],gfitlist=[],ampcorrlist=[],\
                  coordsys='cartesian',d0args=[-100,100,5],d1args=[-100,100,5],\
                  #coordsys='polar',d0args=[0,360,10],d1args=[0,25,1],\
-                 Fargs=[0,1024,1],f_index=900,\
+                 Fargs=[0,1024,1],f_index_cc=900,\
                  operation='coadd',inputstyle='pickle',normalization='none',vplot=True,\
                  pickle_directory='/hirax/GBO_Analysis_Outputs/flight_pickles/',\
                  gfit_directory='/hirax/GBO_Analysis_Outputs/main_beam_fits/',\
@@ -111,7 +111,7 @@ class Beammap:
         self.faxis=np.arange(self.fmin,self.fmax,self.fstep)
         self.n_freqs=len(self.faxis)
         self.freq=CONCATCLASS.freq[self.faxis]
-        find=np.where(self.faxis==f_index)[0][0]
+        find=np.where(self.faxis==f_index_cc)[0][0]
         self.operation=operation
         ## Determine Coordinate System: coordsys='cartesian' or 'polar':
         if coordsys=='cartesian':
@@ -197,7 +197,7 @@ class Beammap:
             ## create automatic verification plot axes:
             if vplot==True:
                 if coordsys=='cartesian':
-                    fig,axes=subplots(nrows=2,ncols=4,figsize=(40,20)) 
+                    fig1,axes=subplots(nrows=2,ncols=4,figsize=(40,20)) 
                 elif coordsys=='polar':
                     fig1=figure(figsize=(40,20))
                     ax11=fig1.add_subplot(241,projection='polar')
@@ -224,10 +224,10 @@ class Beammap:
                     elif coordsys=='polar':
                         ch0coords=np.array([gu.xyz_to_rpt(ccc.drone_xyz_per_dish_interp[0,k,:]) for k in t_cut])[:,1:]
                         ch1coords=np.array([gu.xyz_to_rpt(ccc.drone_xyz_per_dish_interp[1,k,:]) for k in t_cut])[:,1:]
-                    im1x=axes[0][0].scatter(ch0coords[:,0],ch0coords[:,1],c=ccc.V_bgsub[t_cut,f_index,0],cmap=cm.gnuplot2,norm=LogNorm())
-                    im1y=axes[1][0].scatter(ch1coords[:,0],ch1coords[:,1],c=ccc.V_bgsub[t_cut,f_index,1],cmap=cm.gnuplot2,norm=LogNorm())    
-                    im1x0=axes0[0][0].scatter(ch0coords[:,0],ch0coords[:,1],c=ccc.V_bgsub[t_cut,f_index,0],cmap=cm.gnuplot2,norm=LogNorm())
-                    im1y0=axes0[1][0].scatter(ch1coords[:,0],ch1coords[:,1],c=ccc.V_bgsub[t_cut,f_index,1],cmap=cm.gnuplot2,norm=LogNorm())    
+                    im1x=axes[0][0].scatter(ch0coords[:,0],ch0coords[:,1],c=ccc.V_bgsub[t_cut,f_index_cc,0],cmap=cm.gnuplot2,norm=LogNorm())
+                    im1y=axes[1][0].scatter(ch1coords[:,0],ch1coords[:,1],c=ccc.V_bgsub[t_cut,f_index_cc,1],cmap=cm.gnuplot2,norm=LogNorm())    
+                    im1x0=axes0[0][0].scatter(ch0coords[:,0],ch0coords[:,1],c=ccc.V_bgsub[t_cut,f_index_cc,0],cmap=cm.gnuplot2,norm=LogNorm())
+                    im1y0=axes0[1][0].scatter(ch1coords[:,0],ch1coords[:,1],c=ccc.V_bgsub[t_cut,f_index_cc,1],cmap=cm.gnuplot2,norm=LogNorm())    
                 else:
                     pass
             elif normalization=='Gauss':
@@ -254,10 +254,10 @@ class Beammap:
                                 elif coordsys=='polar':
                                     ch0coords=np.array([gu.xyz_to_rpt(ccc.drone_xyz_per_dish_interp[0,k,:]+np.array([self.x_offsets[find,i,h],self.y_offsets[find,i,h],0.0])) for k in t_cut])[:,1:]
                                     ch1coords=np.array([gu.xyz_to_rpt(ccc.drone_xyz_per_dish_interp[1,k,:]+np.array([self.x_offsets[find,i,h],self.y_offsets[find,i,h],0.0])) for k in t_cut])[:,1:]
-                                im1x=axes[0][0].scatter(ch0coords[:,0],ch0coords[:,1],c=(1.0/g_norm[0,f_index])*ccc.V_bgsub[t_cut,f_index,0],cmap=cm.gnuplot2,norm=LogNorm())
-                                im1y=axes[1][0].scatter(ch1coords[:,0],ch1coords[:,1],c=(1.0/g_norm[1,f_index])*ccc.V_bgsub[t_cut,f_index,1],cmap=cm.gnuplot2,norm=LogNorm())
-                                im1x0=axes0[0][0].scatter(ch0coords[:,0],ch0coords[:,1],c=(1.0/g_norm[0,f_index])*ccc.V_bgsub[t_cut,f_index,0],cmap=cm.gnuplot2,norm=LogNorm())
-                                im1y0=axes0[1][0].scatter(ch1coords[:,0],ch1coords[:,1],c=(1.0/g_norm[1,f_index])*ccc.V_bgsub[t_cut,f_index,1],cmap=cm.gnuplot2,norm=LogNorm())
+                                im1x=axes[0][0].scatter(ch0coords[:,0],ch0coords[:,1],c=(1.0/g_norm[0,f_index_cc])*ccc.V_bgsub[t_cut,f_index_cc,0],cmap=cm.gnuplot2,norm=LogNorm())
+                                im1y=axes[1][0].scatter(ch1coords[:,0],ch1coords[:,1],c=(1.0/g_norm[1,f_index_cc])*ccc.V_bgsub[t_cut,f_index_cc,1],cmap=cm.gnuplot2,norm=LogNorm())
+                                im1x0=axes0[0][0].scatter(ch0coords[:,0],ch0coords[:,1],c=(1.0/g_norm[0,f_index_cc])*ccc.V_bgsub[t_cut,f_index_cc,0],cmap=cm.gnuplot2,norm=LogNorm())
+                                im1y0=axes0[1][0].scatter(ch1coords[:,0],ch1coords[:,1],c=(1.0/g_norm[1,f_index_cc])*ccc.V_bgsub[t_cut,f_index_cc,1],cmap=cm.gnuplot2,norm=LogNorm())
                             else:
                                 pass                                                        
             elif normalization=='Gauss_wcorr':
@@ -284,10 +284,10 @@ class Beammap:
                                 elif coordsys=='polar':
                                     ch0coords=np.array([gu.xyz_to_rpt(ccc.drone_xyz_per_dish_interp[0,k,:]+np.array(self.x_offsets[find,i,h],self.y_offsets[find,i,h],0.0)) for k in t_cut])[:,1:]
                                     ch1coords=np.array([gu.xyz_to_rpt(ccc.drone_xyz_per_dish_interp[1,k,:]+np.array(self.x_offsets[find,i,h],self.y_offsets[find,i,h],0.0)) for k in t_cut])[:,1:]
-                                im1x=axes[0][0].scatter(ch0coords[:,0],ch0coords[:,1],c=(1.0/g_norm[0,f_index])*ccc.V_bgsub[t_cut,f_index,0],cmap=cm.gnuplot2,norm=LogNorm())
-                                im1y=axes[1][0].scatter(ch1coords[:,0],ch1coords[:,1],c=(1.0/g_norm[1,f_index])*ccc.V_bgsub[t_cut,f_index,1],cmap=cm.gnuplot2,norm=LogNorm())
-                                im1x0=axes0[0][0].scatter(ch0coords[:,0],ch0coords[:,1],c=(1.0/g_norm[0,f_index])*ccc.V_bgsub[t_cut,f_index,0],cmap=cm.gnuplot2,norm=LogNorm())
-                                im1y0=axes0[1][0].scatter(ch1coords[:,0],ch1coords[:,1],c=(1.0/g_norm[1,f_index])*ccc.V_bgsub[t_cut,f_index,1],cmap=cm.gnuplot2,norm=LogNorm())                               
+                                im1x=axes[0][0].scatter(ch0coords[:,0],ch0coords[:,1],c=(1.0/g_norm[0,f_index_cc])*ccc.V_bgsub[t_cut,f_index_cc,0],cmap=cm.gnuplot2,norm=LogNorm())
+                                im1y=axes[1][0].scatter(ch1coords[:,0],ch1coords[:,1],c=(1.0/g_norm[1,f_index_cc])*ccc.V_bgsub[t_cut,f_index_cc,1],cmap=cm.gnuplot2,norm=LogNorm())
+                                im1x0=axes0[0][0].scatter(ch0coords[:,0],ch0coords[:,1],c=(1.0/g_norm[0,f_index_cc])*ccc.V_bgsub[t_cut,f_index_cc,0],cmap=cm.gnuplot2,norm=LogNorm())
+                                im1y0=axes0[1][0].scatter(ch1coords[:,0],ch1coords[:,1],c=(1.0/g_norm[1,f_index_cc])*ccc.V_bgsub[t_cut,f_index_cc,1],cmap=cm.gnuplot2,norm=LogNorm())                               
                             else:
                                 pass
                         with open(ampcorr_directory+ampcorrlist[h],'rb') as acf:
@@ -300,12 +300,13 @@ class Beammap:
             tmpshifts=np.repeat(np.swapaxes(np.swapaxes(shiftvec,0,2),1,2)[:,np.newaxis,:,:],len(ccc.t),axis=1)
             fccoords=(tmpcoords-tmpshifts)[:,ccc.inds_on]
             if normalization=='none':
-                Vvals=ccc.V_bgsub[ccc.inds_on,:,:]
+                Vvals=ccc.V_bgsub[ccc.inds_on,self.fmin:self.fmax:self.fstep,:]
+                fccoords=tmpcoords[:,ccc.inds_on]
             elif normalization=='Gauss':
                 Vvals=(np.repeat(np.swapaxes(g_norm[:,self.fmin:self.fmax:self.fstep],0,1)[np.newaxis,:,:],len(ccc.inds_on),axis=0)**-1)*ccc.V_bgsub[ccc.inds_on,self.fmin:self.fmax:self.fstep,:]           
             elif normalization=='Gauss_wcorr':    
                 Vvals_gcorr=(np.repeat(np.swapaxes(g_norm[:,self.fmin:self.fmax:self.fstep],0,1)[np.newaxis,:,:],len(ccc.inds_on),axis=0)**-1)*ccc.V_bgsub[ccc.inds_on,self.fmin:self.fmax:self.fstep,:]      
-                Vvals = Vvals_gcorr*gcorr_norm[self.faxis,:] 
+                Vvals = Vvals_gcorr*gcorr_norm[self.faxis,:]
             ## loop through channels (i,chan) to find indices of nonzero cells in histogram
             for i,chan in enumerate(range(self.n_channels)):
                 for j,fr in enumerate(self.faxis):
@@ -315,14 +316,14 @@ class Beammap:
                     elif coordsys=='polar':
                         polcoords=np.array([gu.xyz_to_rpt(fccoords[i,k,:,j]) for k in range(len(fccoords[i,:,:,j]))])
                         xf,yf=polcoords[:,1],polcoords[:,2]                      
-                    valsf=Vvals[:,j,i]                        
+                    valsf=Vvals[:,j,i]    
                     #histo2d,xbins,ybins=np.histogram2d(x,y,bins=[self.x_edges[:,i],self.y_edges[:,i]])
                     self.histogram_LC[:,:,j,i,h]=binned_statistic_2d(x=xf,y=yf,values=valsf,statistic='count',bins=[self.d0_edges[:,i],self.d1_edges[:,i]]).statistic
                     self.V_LC_mean[:,:,j,i,h]=binned_statistic_2d(x=xf,y=yf,values=valsf,statistic='mean',bins=[self.d0_edges[:,i],self.d1_edges[:,i]]).statistic
                     self.V_LC_std[:,:,j,i,h]=binned_statistic_2d(x=xf,y=yf,values=valsf,statistic='std',bins=[self.d0_edges[:,i],self.d1_edges[:,i]]).statistic
             if include_cross_data==True:
                 for i,cmind in enumerate(self.crossmap):
-                    Vvals_cross=ccc.V_cross_bgsub[ccc.inds_on,:,:]
+                    Vvals_cross=ccc.V_cross_bgsub[ccc.inds_on,self.fmin:self.fmax:self.fstep,:]
                     for j,fr in enumerate(self.faxis):
                         print('cross: Concat:{}/{}, Channel:{}/{}, Frequency:{}/{},           '.format(h+1,self.n_concats,i+1,len(self.crossmap),j+1,len(self.freq)),end='\r')
                         if coordsys=='cartesian':
@@ -374,7 +375,7 @@ class Beammap:
             for i in range(2):
                 ax1,ax2,ax3,ax4=axes0[i]
                 im2=ax2.pcolormesh(self.d0_edges_grid[:,:,i],self.d1_edges_grid[:,:,i],np.nansum(self.histogram_LC[:,:,find,i,:],axis=2),cmap=cm.gnuplot2)
-                im2.set_clim(0,300)
+                im2.set_clim(0,30)
                 im3=ax3.pcolormesh(self.d0_edges_grid[:,:,i],self.d1_edges_grid[:,:,i],self.V_LC_operation[:,:,find,i],cmap=cm.gnuplot2,norm=LogNorm())
                 im4=ax4.pcolormesh(self.d0_edges_grid[:,:,i],self.d1_edges_grid[:,:,i],np.nanmean(self.V_LC_std[:,:,find,i,:],axis=2),cmap=cm.gnuplot2,norm=LogNorm())
                 images=[[im1x0,im1y0][i],im2,im3,im4]
