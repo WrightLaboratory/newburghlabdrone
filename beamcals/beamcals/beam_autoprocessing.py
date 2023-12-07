@@ -262,55 +262,6 @@ class Beammap_forautoprocessing:
                         self.x_offsets[:,i,h]=gff['G_popt'][COPOLIND,self.faxis,1]-ccc.dish_coords[i][0] # seems like gauss params were found with original xyz, so remove dish offset
                         self.y_offsets[:,i,h]=gff['G_popt'][COPOLIND,self.faxis,3]-ccc.dish_coords[i][1] # seems like gauss params were found with original xyz, so remove dish offset
                                 
-                                                
-            if self.normalization=='Gauss_wcorr':
-
-                if self.FLYNUM!='618' and self.FLYNUM!='620':
-                   # get normalization
-                   gcorrfile=glob.glob(self.ampcorr_directory+'*'+self.FLYNUM+'*.pkl')[0]
-                   with open(gcorrfile,'rb') as acf:
-                       gcorr_norm=pickle.load(acf)
-                   Vvals *= gcorr_norm[0,self.faxis,:][np.newaxis,:,:]
-                else: ''
-                            
-            ## create centroid-corrected per channel and frequency drone coordinate maps on a per-concat basis:
-            tmpcoords=np.repeat(ccc.drone_xyz_per_dish_interp[:,:,:,np.newaxis],self.n_freqs,axis=3)
-            shiftvec=np.array((self.x_offsets[:,:,h],self.y_offsets[:,:,h],np.zeros(self.x_offsets[:,:,h].shape)))
-            tmpshifts=np.repeat(np.swapaxes(np.swapaxes(shiftvec,0,2),1,2)[:,np.newaxis,:,:],len(ccc.t),axis=1)
-            fccoords=(tmpcoords-tmpshifts)[:,ccc.inds_on]
-                
-            return Vvals,fccoords 
-                
-            for j,fstr in enumerate(doccs['flight_info']['flights']):
-                if self.FLYNUM in fstr:
-                    self.copoldir=doccs['flight_info']['pols'][j]
-                    
-            ## using the with loop structure, the pickle file is closed after ccc is loaded:
-            with open(cstring, "rb") as f:
-                ccc=pickle.load(f)   
-            t_cut=ccc.inds_on
-            if self.normalization=='none':
-                Vvals=ccc.V_bgsub[ccc.inds_on,:,:]
-            if self.normalization=='Gauss' or self.normalization=='Gauss_wcorr':
-                # get the normalization:
-                gfit=glob.glob(self.gfit_directory+'*'+self.FLYNUM+'*.npz')[0]
-                print(self.FLYNUM,gfit)
-                gff = np.load(gfit)
-                g_norm=gff['G_popt'][:,:,0]
-                Vvals=(np.repeat(
-                    np.swapaxes(g_norm[:,self.fmin:self.fmax:self.fstep],0,1)[np.newaxis,:,:],len(ccc.inds_on),axis=0)**-1)*ccc.V_bgsub[ccc.inds_on,self.fmin:self.fmax:self.fstep,:]       
-                
-                for i in range(self.n_channels):
-                    if self.copoldir in 'E':
-                        COPOLIND=np.arange(self.n_channels).reshape(int(self.n_channels/2),2)[int(i/2)][0]
-                        self.x_offsets[:,i,h]=gff['G_popt'][COPOLIND,self.faxis,1]-ccc.dish_coords[i][0] # seems like gauss params were found with original xyz, so remove dish offset
-                        self.y_offsets[:,i,h]=gff['G_popt'][COPOLIND,self.faxis,3]-ccc.dish_coords[i][1] # seems like gauss params were found with original xyz, so remove dish offset
-                    elif self.copoldir in 'N':
-                        COPOLIND=np.arange(self.n_channels).reshape(int(self.n_channels/2),2)[int(i/2)][1]
-                        self.x_offsets[:,i,h]=gff['G_popt'][COPOLIND,self.faxis,1]-ccc.dish_coords[i][0] # seems like gauss params were found with original xyz, so remove dish offset
-                        self.y_offsets[:,i,h]=gff['G_popt'][COPOLIND,self.faxis,3]-ccc.dish_coords[i][1] # seems like gauss params were found with original xyz, so remove dish offset
-                                
-                                                
             if self.normalization=='Gauss_wcorr':
                 # get normalization
                 gcorrfile=glob.glob(self.ampcorr_directory+'*'+flynum+'*.pkl')[0]
@@ -325,10 +276,6 @@ class Beammap_forautoprocessing:
             fccoords=(tmpcoords-tmpshifts)[:,ccc.inds_on]
                 
             return Vvals,fccoords
-
-
-
-
 
 
 def get_coord_locs(coordsys,d0args,d1args,n_channels):
@@ -393,7 +340,7 @@ def get_maskvals(coordsys):
         maskout = 40
     if coordsys=='polar':
         maskin = 6*np.pi/180.
-        maskout = 12*np.pi/180
+        maskout = maskin#12*np.pi/180
     return maskin, maskout
 
         
@@ -637,13 +584,16 @@ class Beammap_polar:
                     self.x_offsets[:,i,h]=gff['G_popt'][COPOLIND,self.faxis,1]-ccc.dish_coords[i][0] # seems like gauss params were found with original xyz, so remove dish offset
                     self.y_offsets[:,i,h]=gff['G_popt'][COPOLIND,self.faxis,3]-ccc.dish_coords[i][1] # seems like gauss params were found with original xyz, so remove dish offset
                                 
-                                                
+        
         if self.normalization=='Gauss_wcorr':
-            gcorrfile=glob.glob(self.ampcorr_directory+'*'+self.FLYNUM+'*.pkl')[0]
-            with open(gcorrfile,'rb') as acf:
-                gcorr_norm=pickle.load(acf)
-            Vvals *= gcorr_norm[0,self.faxis,:][np.newaxis,:,:]
-                            
+            if self.FLYNUM!='618' and self.FLYNUM!='620':
+                # get normalization
+                gcorrfile=glob.glob(self.ampcorr_directory+'*'+self.FLYNUM+'*.pkl')[0]
+                with open(gcorrfile,'rb') as acf:
+                    gcorr_norm=pickle.load(acf)
+                Vvals *= gcorr_norm[0,self.faxis,:][np.newaxis,:,:]
+            else: ''
+                                        
         ## create centroid-corrected per channel and frequency drone coordinate maps on a per-concat basis:
         tmpcoords=np.repeat(ccc.drone_xyz_per_dish_interp[:,:,:,np.newaxis],self.n_freqs,axis=3)
         shiftvec=np.array((self.x_offsets[:,:,h],self.y_offsets[:,:,h],np.zeros(self.x_offsets[:,:,h].shape)))

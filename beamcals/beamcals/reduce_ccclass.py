@@ -115,14 +115,14 @@ class Smallify_comap:
         self.operation=beamclass.operation
         
         #need to extend this to dimensionality of channels in concatclass.V
-        self.x_edges=beamclass.x_edges
-        self.y_edges=beamclass.y_edges
-        self.x_edges_grid=beamclass.x_edges_grid
-        self.y_edges_grid=beamclass.y_edges_grid
-        self.x_centers=beamclass.x_centers
-        self.y_centers=beamclass.y_centers
-        self.x_centers_grid=beamclass.x_centers_grid
-        self.y_centers_grid=beamclass.y_centers_grid
+        self.d0_edges=beamclass.d0_edges
+        self.d1_edges=beamclass.d1_edges
+        self.d0_edges_grid=beamclass.d0_edges_grid
+        self.d1_edges_grid=beamclass.d1_edges_grid
+        self.d0_centers=beamclass.d0_centers
+        self.d1_centers=beamclass.d1_centers
+        self.d0_centers_grid=beamclass.d0_centers_grid
+        self.d1_centers_grid=beamclass.d1_centers_grid
             
         ## now need frequency dependent offset terms in shape (freq, channel, concat) to mimic V
         self.x_offsets=beamclass.x_offsets

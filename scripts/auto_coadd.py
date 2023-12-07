@@ -80,21 +80,31 @@ amparr=np.sort(os.listdir(ampdir))
 Npolflights = ['618','619','625','646','647','533','536']
 Epolflights = ['620','648','649','535']
 
+delt_the = np.radians(6)
+delt_phi = np.radians(1)
+
 for find in good_freqs:
     print('Working on Frequency: ',find,freqs[find])
 
     flights = Npolflights
     concytest=[glob.glob(pckldir+'*'+fly+'*')[0] for fly in flights]    
 
-    beam=ba.Beammap_forautoprocessing(concatlist=concytest,
-                 normalization='Gauss_wcorr',operation='std',mask=True,Xargs=[-1*sz,sz,2.5],
-                 Yargs=[-1*sz,sz,2.5],Fargs=[find,find+1,1])
+    #beam=ba.Beammap_forautoprocessing(concatlist=concytest,
+    #             normalization='Gauss_wcorr',operation='std',mask=True,Xargs=[-1*sz,sz,2.5],
+    #             Yargs=[-1*sz,sz,2.5],Fargs=[find,find+1,1])
+    beam=ba.Beammap_polar(concatlist=concytest,
+                coordsys='polar',
+                d0args=[-delt_the/2.0,(60*delt_the)-(delt_the/2.0),delt_the],
+                d1args=[0,np.radians(36),delt_phi],
+                normalization='Gauss_wcorr',operation='std',Fargs=[find,find+1,1],
+                f_index=find,vplot=False,mask=True)
 
     thingy = rc.Smallify_comap(beam)
     for j,fstr in enumerate(documents['flight_info']['flights']):
         if beam.FLYNUM in fstr:
             copoldir=documents['flight_info']['pols'][j]
-    write_pickle = beamdir+'Beamcoadd_pol_'+copoldir+'_freq_'+str(find)+'.pkl'
+    #write_pickle = beamdir+'Beamcoadd_pol_'+copoldir+'_freq_'+str(find)+'.pkl'
+    write_pickle = beamdir+'Beamcoadd_pol_'+copoldir+'_freq_'+str(find)+'_polar.pkl'
 
     print(write_pickle)
     with open(write_pickle, 'wb') as outp:
@@ -105,16 +115,23 @@ for find in good_freqs:
     flights = Epolflights
     concytest=[glob.glob(pckldir+'*'+fly+'*')[0] for fly in flights]    
 
-    beam=ba.Beammap_forautoprocessing(concatlist=concytest,
-                 normalization='Gauss_wcorr',operation='std',mask=True,Xargs=[-1*sz,sz,2.5],
-                 Yargs=[-1*sz,sz,2.5],Fargs=[find,find+1,1])
+    #beam=ba.Beammap_forautoprocessing(concatlist=concytest,
+    #             normalization='Gauss_wcorr',operation='std',mask=True,Xargs=[-1*sz,sz,2.5],
+    #             Yargs=[-1*sz,sz,2.5],Fargs=[find,find+1,1])
+    beam=ba.Beammap_polar(concatlist=concytest,
+                 coordsys='polar',
+                 d0args=[-delt_the/2.0,(60*delt_the)-(delt_the/2.0),delt_the],
+                 d1args=[0,np.radians(36),delt_phi],
+                 normalization='Gauss_wcorr',operation='std',Fargs=[find,find+1,1],
+                 f_index=find,vplot=False,mask=True)
 
     thingy = rc.Smallify_comap(beam)
     for j,fstr in enumerate(documents['flight_info']['flights']):
         if beam.FLYNUM in fstr:
             copoldir=documents['flight_info']['pols'][j]
     print(copoldir)
-    write_pickle = beamdir+'Beamcoadd_pol_'+copoldir+'_freq_'+str(find)+'.pkl'
+    #write_pickle = beamdir+'Beamcoadd_pol_'+copoldir+'_freq_'+str(find)+'.pkl'
+    write_pickle = beamdir+'Beamcoadd_pol_'+copoldir+'_freq_'+str(find)+'_polar.pkl'
 
     print(write_pickle)
     with open(write_pickle, 'wb') as outp:
