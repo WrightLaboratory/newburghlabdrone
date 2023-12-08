@@ -264,7 +264,7 @@ class Beammap_forautoprocessing:
                                 
             if self.normalization=='Gauss_wcorr':
                 # get normalization
-                gcorrfile=glob.glob(self.ampcorr_directory+'*'+flynum+'*.pkl')[0]
+                gcorrfile=glob.glob(self.ampcorr_directory+'*'+self.FLYNUM+'*.pkl')[0]
                 with open(gcorrfile,'rb') as acf:
                     gcorr_norm=pickle.load(acf)
                 Vvals *= gcorr_norm[0,self.faxis,:][np.newaxis,:,:]
