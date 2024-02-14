@@ -90,6 +90,24 @@ class Drone_Data:
                 self.t_arr_timestamp=np.array(drone_data.datetimestamp)
             self.t_index=np.arange(len(self.t_arr_timestamp))
             self.t_arr_datetime=np.array(drone_data.assign(UTC=pandas.to_datetime(drone_data.UTC)).UTC)
+        ## Adding code for Airdata.csv methods for RTK 300
+        if "Airdata" in self.FLYTAG:
+            print("Initializing drone data via Airdata.csv routine: {}".format(self.FLYTAG))
+            print("  --> Skipping rows {} to {} to eliminate NAN values".format(skip_rows[0],skip_rows[-1]))
+            ## Load data columns from airdata files:
+            self.latitude=np.array(drone_data.['latitude'])
+            self.longitude=np.array(drone_data.['longitude'])
+            self.pitch=np.array(drone_data.['pitch(degrees)'])
+            self.roll=np.array(drone_data.['roll(degrees)'])
+            self.yaw=np.array(drone_data.['compass_heading(degrees)'])
+            self.velocity=np.array(drone_data['speed(m/s)'])
+            self.hmsl=np.array(drone_data.['altitude_above_seaLevel(meters)'])
+            self.altitude=np.array(drone_data['altitude_above_seaLevel(meters)'])[:]-self.origin[2]
+            try:
+                self.t_arr_timestamp=np.array(pandas.to_datetime(dat['datetime(utc)'],utc=True),dtype='object')
+            self.t_index=np.arange(len(t_def))
+            t0=t_def[0]
+            self.t_arr_datetime=np.array([t0+datetime.timedelta(milliseconds=x) for x in dat['time(millisecond)']],dtype='object')
         else:
             print("Initializing drone data via datcon_csv routine: {}".format(self.FLYTAG))
             print("  --> Skipping rows {} to {} to eliminate NAN values".format(skip_rows[0],skip_rows[-1]))
