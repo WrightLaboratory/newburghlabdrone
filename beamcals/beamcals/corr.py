@@ -29,7 +29,7 @@ import datetime
 import pytz
 
 class Corr_Data:
-    def __init__(self,Data_Directory,Gain_Directory,site_class,Data_File_Index=None,Load_Gains=True,Fix_Gains=False,Apply_Gains=True,Gain_Params=[1.0,24.0],fbounds=[0,1024],use_ctime=False,crossmap=None):
+    def __init__(self,Data_Directory,Gain_Directory,site_class,Data_File_Index=None,Load_Gains=True,Fix_Gains=False,Apply_Gains=True,Gain_Params=[1.0,24.0],fbounds=[0,1024],use_ctime=False,crossmap=None,esystem=False):
         ## Get data files using os instead of git:
         self.Data_Directory=Data_Directory
         self.Gain_Directory=Gain_Directory
@@ -43,7 +43,13 @@ class Corr_Data:
         fub=fbounds[1]
         vis=fd['vis'][:,flb:fub,:] ## This is the visibility matrix (the data)
         if 'CHIME' in site_class.name:
-            vis=np.array(fd['vis']).transpose(2,0,1)[:,flb:fub,:]
+            if esystem==True:
+                ## Taking *only* the first (zeroeth) eigenvector/eigenvalue! 
+                Cevals=np.tile(np.array(fd['eval']).transpose(2,0,1)[:,:,:,np.newaxis][:,:,0,:],fd['evec'].shape[2])
+                Cevecs=np.abs(np.array(fd['evec'][:,0,:,:]).transpose(2,0,1))**2.0
+                vis=Cevals*Cevecs
+            else:
+                vis=np.array(fd['vis']).transpose(2,0,1)[:,flb:fub,:]
         ##distinguish bw processed and unprocessed files (EK)
         if 'processed' in Data_Directory and 'new' not in Data_Directory: 
             tm = fd['tm']
@@ -112,7 +118,13 @@ class Corr_Data:
                 fd_n=h5py.File(self.Data_Directory+self.filenames[Data_File_Index[i]], 'r')
                 vis=fd_n['vis'][:,flb:fub,:] # Visibility matrix
                 if 'CHIME' in site_class.name:
-                    vis=np.array(fd_n['vis']).transpose(2,0,1)[:,flb:fub,:]
+                    if esystem==True:
+                        ## Taking *only* the first (zeroeth) eigenvector/eigenvalue! 
+                        Cevals=np.tile(np.array(fd_n['eval']).transpose(2,0,1)[:,:,:,np.newaxis][:,:,0,:],fd_n['evec'].shape[2])
+                        Cevecs=np.abs(np.array(fd_n['evec'][:,0,:,:]).transpose(2,0,1))**2.0
+                        vis=Cevals*Cevecs
+                    else:
+                        vis=np.array(fd_n['vis']).transpose(2,0,1)[:,flb:fub,:]
                 ##distinguish bw processed and unprocessed files
                 if 'processed' in Data_Directory and 'new' not in Data_Directory:
                     tm=fd_n['tm'][:] # time axis
