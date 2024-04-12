@@ -132,9 +132,9 @@ def run_one_pair(fly1,fly2):
       concattest1=pickle.load(pfile)
    t_cut=concattest1.inds_on    
 
-   beam1=bp.Beammap(concatlist=pcklarr[[fi]],gfitlist=gfitarr[[fi]],
-                 normalization='Gauss',operation='coadd',Xargs=[-1*sz,sz,2.5],
-                 Yargs=[-1*sz,sz,2.5],Fargs=[fmin,fmax,fstep],f_index=find,vplot=False)
+   beam1=bp.Beammap(concatlist=pcklarr[[fi]],gfitlist=gfitarr[[fi]],coordsys='cartesian',
+                 normalization='Gauss_woff',operation='coadd',d0args=[-1*sz,sz,2.5],
+                 d1args=[-1*sz,sz,2.5],Fargs=[fmin,fmax,fstep],f_index_cc=find,vplot=False)
 
    pol, pols, cpols, attn, fi = get_flightinfo(fly2)
    print(fly2,pol,pols,cpols, attn)
@@ -147,9 +147,9 @@ def run_one_pair(fly1,fly2):
       concattest2=pickle.load(pfile)
    t_cut=concattest2.inds_on    
 
-   beam2=bp.Beammap(concatlist=pcklarr[[fi]],gfitlist=gfitarr[[fi]],
-                 normalization='Gauss',operation='coadd',Xargs=[-1*sz,sz,2.5],
-                 Yargs=[-1*sz,sz,2.5],Fargs=[fmin,fmax,fstep],f_index=find,vplot=False)
+   beam2=bp.Beammap(concatlist=pcklarr[[fi]],gfitlist=gfitarr[[fi]],coordsys='cartesian',
+                 normalization='Gauss_woff',operation='coadd',d0args=[-1*sz,sz,2.5],
+                 d1args=[-1*sz,sz,2.5],Fargs=[fmin,fmax,fstep],f_index_cc=find,vplot=False)
 
    ## Create masks:
 

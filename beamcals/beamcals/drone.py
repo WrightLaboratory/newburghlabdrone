@@ -90,6 +90,24 @@ class Drone_Data:
                 self.t_arr_timestamp=np.array(drone_data.datetimestamp)
             self.t_index=np.arange(len(self.t_arr_timestamp))
             self.t_arr_datetime=np.array(drone_data.assign(UTC=pandas.to_datetime(drone_data.UTC)).UTC)
+        ## Adding code for Airdata.csv methods for RTK 300
+        if "Airdata" in self.FLYTAG:
+            print("Initializing drone data via Airdata.csv routine: {}".format(self.FLYTAG))
+            print("  --> Skipping rows {} to {} to eliminate NAN values".format(skip_rows[0],skip_rows[-1]))
+            ## Load data columns from airdata files:
+            self.latitude=np.array(drone_data['latitude'])
+            self.longitude=np.array(drone_data['longitude'])
+            self.pitch=np.array(drone_data[' pitch(degrees)'])
+            self.roll=np.array(drone_data[' roll(degrees)'])
+            self.yaw=np.array(drone_data[' compass_heading(degrees)'])
+            self.velocity=np.array(drone_data['speed(m/s)'])
+            self.hmsl=np.array(drone_data['altitude_above_seaLevel(meters)'])
+            self.altitude=np.array(drone_data['altitude_above_seaLevel(meters)'])[:]-self.origin[2]
+            self.t_arr_timestamp=np.array(pandas.to_datetime(drone_data['datetime(utc)'],utc=True),dtype='object')
+            self.t_index=np.arange(len(self.t_arr_timestamp))
+            t0=self.t_arr_timestamp[0]
+            datetimes=[t0+datetime.timedelta(milliseconds=x) for x in drone_data['time(millisecond)']]
+            self.t_arr_datetime=np.array(datetimes,dtype='object')
         else:
             print("Initializing drone data via datcon_csv routine: {}".format(self.FLYTAG))
             print("  --> Skipping rows {} to {} to eliminate NAN values".format(skip_rows[0],skip_rows[-1]))
@@ -220,10 +238,10 @@ class Drone_Data:
             self.coords_rpt[i]=[r_prime,phi_prime,theta_prime]
         print("  --> generating dish and receiver line of sight coordinates.")
         ## Calculate per-dish polar coordinates for drone/receiver in each other's beams as fxn of time:
-        self.xyz_per_dish=np.zeros((len(self.dish_keystrings),len(self.t_index),3)) # drone posn wrt receiver
-        self.rpt_r_per_dish=np.zeros((len(self.dish_keystrings),len(self.t_index),3)) # drone posn wrt receiver
-        self.rpt_t_per_dish=np.zeros((len(self.dish_keystrings),len(self.t_index),3)) # receiver posn wrt drone
-        for i in range(len(self.dish_keystrings)):
+        self.xyz_per_dish=np.zeros((self.n_dishes,len(self.t_index),3)) # drone posn wrt receiver
+        self.rpt_r_per_dish=np.zeros((self.n_dishes,len(self.t_index),3)) # drone posn wrt receiver
+        self.rpt_t_per_dish=np.zeros((self.n_dishes,len(self.t_index),3)) # receiver posn wrt drone
+        for i in range(self.n_dishes):
             ## Receiver RPT after TRANS and ROT: (from receiver N to Drone in Receiver Cartesian "RC" coords)
             drone_xyz_RC=self.coords_xyz_LC-self.dish_coords[i] # translate LC to receiver i position
             self.xyz_per_dish[i,:,:]=drone_xyz_RC
