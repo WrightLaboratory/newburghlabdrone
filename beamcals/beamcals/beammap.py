@@ -230,12 +230,13 @@ class Beammap:
                     im1y0=axes0[1][0].scatter(ch1coords[:,0],ch1coords[:,1],c=ccc.V_bgsub[t_cut,f_index_cc,1],cmap=cm.gnuplot2,norm=LogNorm())    
                 else:
                     pass
-            elif normalization=='Gauss':
+            elif normalization=='Gauss' or normalization=='Gauss_woffset':
                 if len(gfitlist)==len(concatlist):
                     ## make sure the normalization is being appropriately applied to the correct file:
                     if concatlist[h].split('_')[0]==gfitlist[h].split('_')[0]:
                         with np.load(gfit_directory+gfitlist[h]) as gff:
-                            g_norm=gff['G_popt'][:,:,0]
+                            if normalization=='Gauss_woffset': g_norm = gff['G_popt'][:,:,0]+gff['G_popt'][:,:,5]
+                            else: g_norm=gff['G_popt'][:,:,0]
                             for i in range(self.n_channels):
                                 if self.copoldir in 'E':
                                     COPOLIND=np.arange(self.n_channels).reshape(int(self.n_channels/2),2)[int(i/2)][0]
@@ -265,7 +266,7 @@ class Beammap:
                     ## make sure the normalization is being appropriately applied to the correct file:
                     if concatlist[h].split('_')[0]==gfitlist[h].split('_')[0] and concatlist[h].split('_')[0]==ampcorrlist[h].split('_')[0]:
                         with np.load(gfit_directory+gfitlist[h]) as gff:
-                            g_norm=gff['G_popt'][:,:,0]
+                            g_norm=gff['G_popt'][:,:,0]+gff['G_popt'][:,:,5]
                             for i in range(self.n_channels):
                                 if self.copoldir in 'E':
                                     COPOLIND=np.arange(self.n_channels).reshape(int(self.n_channels/2),2)[int(i/2)][0]
@@ -302,7 +303,7 @@ class Beammap:
             if normalization=='none':
                 Vvals=ccc.V_bgsub[ccc.inds_on,self.fmin:self.fmax:self.fstep,:]
                 fccoords=tmpcoords[:,ccc.inds_on]
-            elif normalization=='Gauss':
+            elif normalization=='Gauss' or normalization=='Gauss_woffset':
                 Vvals=(np.repeat(np.swapaxes(g_norm[:,self.fmin:self.fmax:self.fstep],0,1)[np.newaxis,:,:],len(ccc.inds_on),axis=0)**-1)*ccc.V_bgsub[ccc.inds_on,self.fmin:self.fmax:self.fstep,:]           
             elif normalization=='Gauss_wcorr':    
                 Vvals_gcorr=(np.repeat(np.swapaxes(g_norm[:,self.fmin:self.fmax:self.fstep],0,1)[np.newaxis,:,:],len(ccc.inds_on),axis=0)**-1)*ccc.V_bgsub[ccc.inds_on,self.fmin:self.fmax:self.fstep,:]      

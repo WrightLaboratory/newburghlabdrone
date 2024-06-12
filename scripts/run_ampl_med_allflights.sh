@@ -16,7 +16,7 @@ do
     do 
        python run_diffmaps_perflight.py  $f 620 18 35 $a
     done 
-    for f in 619 625 623 646 647 536 533
+    for f in 619 625 623 646 647 533
     do 
        python run_diffmaps_perflight.py  $f 618 20 40 $a
     done 

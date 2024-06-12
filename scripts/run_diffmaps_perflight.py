@@ -49,6 +49,7 @@ maskout = args.outer_mask #40 # annulus mask, 40 for large flights
 
 fmin = args.minfreq
 fmax = fmin+32
+#fmax = fmin+2
 fstep = 1
 find = fmin+fstep
 
@@ -62,7 +63,7 @@ ymldir = '/hirax/GBO_Analysis_Outputs/concat_config_files/'
 pckldir = '/hirax/GBO_Analysis_Outputs/flight_pickles/'
 
 ## Read in Yaml file for info per flight:
-with open('GBO_flights_forscripts.yaml', 'r') as fff:
+with open('/hirax/GBO_Analysis_Outputs/GBO_flights_forscripts.yaml', 'r') as fff:
     documents = yaml.safe_load(fff)
 flights = documents["flight_info"]["flights"]
 N_pols = documents["flag_info"]["N_pols"]
@@ -72,19 +73,8 @@ attns = documents["flight_info"]["attns"]
 
 pcklarr=np.sort(os.listdir(pckldir))
 gfitarr=np.sort(os.listdir(fitdir))
-print(pcklarr)
+print(pcklarr,gfitarr)
 
-## Define anything I want to keep common
-dotsize=1
-res = 500
-LX,LY = np.meshgrid(np.linspace(-100,100,res), np.linspace(-100,100,res))
-X = np.arange(-100,100,2.0,dtype='float64')
-Y = np.arange(-100,100,2.0,dtype='float64')
-
-
-# Define colormap for this nb:
-cmap = matplotlib.cm.get_cmap('gnuplot2')
-norm = matplotlib.colors.Normalize(vmin=-25, vmax=25)
 
 sliw = 10 # This defines slices for (some) plots
 sz = 80 # use this to set the size of the Xargs and Yargs for beammapping, usually 80 or 50
@@ -133,7 +123,7 @@ def run_one_pair(fly1,fly2):
    t_cut=concattest1.inds_on    
 
    beam1=bp.Beammap(concatlist=pcklarr[[fi]],gfitlist=gfitarr[[fi]],coordsys='cartesian',
-                 normalization='Gauss_woff',operation='coadd',d0args=[-1*sz,sz,2.5],
+                 normalization='Gauss_woffset',operation='coadd',d0args=[-1*sz,sz,2.5],
                  d1args=[-1*sz,sz,2.5],Fargs=[fmin,fmax,fstep],f_index_cc=find,vplot=False)
 
    pol, pols, cpols, attn, fi = get_flightinfo(fly2)
@@ -148,26 +138,26 @@ def run_one_pair(fly1,fly2):
    t_cut=concattest2.inds_on    
 
    beam2=bp.Beammap(concatlist=pcklarr[[fi]],gfitlist=gfitarr[[fi]],coordsys='cartesian',
-                 normalization='Gauss_woff',operation='coadd',d0args=[-1*sz,sz,2.5],
+                 normalization='Gauss_woffset',operation='coadd',d0args=[-1*sz,sz,2.5],
                  d1args=[-1*sz,sz,2.5],Fargs=[fmin,fmax,fstep],f_index_cc=find,vplot=False)
 
    ## Create masks:
 
    # Mask inner region
-   thingyx = np.ma.masked_inside(beam1.x_centers_grid[:,:,chind], low, high, copy=True)
-   thingyy = np.ma.masked_inside(beam1.y_centers_grid[:,:,chind], low, high, copy=True)
+   thingyx = np.ma.masked_inside(beam1.d0_centers_grid[:,:,chind], low, high, copy=True)
+   thingyy = np.ma.masked_inside(beam1.d1_centers_grid[:,:,chind], low, high, copy=True)
    inner_mask = np.logical_and(thingyx.mask,thingyy.mask)
 
    # Mask outer region
    outer_mask = np.logical_not(inner_mask)
 
    # Mask annulus
-   thingyx = np.ma.masked_inside(beam1.x_centers_grid[:,:,chind], -1*maskin, maskin, copy=True)
-   thingyy = np.ma.masked_inside(beam1.y_centers_grid[:,:,chind], -1*maskin, maskin, copy=True)
+   thingyx = np.ma.masked_inside(beam1.d0_centers_grid[:,:,chind], -1*maskin, maskin, copy=True)
+   thingyy = np.ma.masked_inside(beam1.d1_centers_grid[:,:,chind], -1*maskin, maskin, copy=True)
    inner_mask = np.logical_and(thingyx.mask,thingyy.mask)
 
-   thingyx = np.ma.masked_inside(beam1.x_centers_grid[:,:,chind], -1*maskout, maskout, copy=True)
-   thingyy = np.ma.masked_inside(beam1.y_centers_grid[:,:,chind], -1*maskout, maskout, copy=True)
+   thingyx = np.ma.masked_inside(beam1.d0_centers_grid[:,:,chind], -1*maskout, maskout, copy=True)
+   thingyy = np.ma.masked_inside(beam1.d1_centers_grid[:,:,chind], -1*maskout, maskout, copy=True)
    thingy = np.logical_and(thingyx.mask,thingyy.mask)
    outer_mask = np.logical_not(thingy)
 
@@ -193,7 +183,7 @@ def run_one_pair(fly1,fly2):
          tots[2,beam1.faxis[freq],chind] = nss[mm] # stddev
          mm = np.argmin(statarr[:,2])
          tots[3,beam1.faxis[freq],chind] = nss[mm] # sum
-         
+         print('TOTSSSSSSS', tots[0,beam1.faxis[freq],chind],beam1.faxis[freq],chind)         
 
    pklfile = 'Flight_'+str(fly2)+'-Flight'+str(fly1)+'_freqind_'+str(fmin)+'_norms.pkl'
    with open(pklfile, 'wb') as outp:
