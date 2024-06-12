@@ -238,10 +238,10 @@ class Drone_Data:
             self.coords_rpt[i]=[r_prime,phi_prime,theta_prime]
         print("  --> generating dish and receiver line of sight coordinates.")
         ## Calculate per-dish polar coordinates for drone/receiver in each other's beams as fxn of time:
-        self.xyz_per_dish=np.zeros((len(self.dish_keystrings),len(self.t_index),3)) # drone posn wrt receiver
-        self.rpt_r_per_dish=np.zeros((len(self.dish_keystrings),len(self.t_index),3)) # drone posn wrt receiver
-        self.rpt_t_per_dish=np.zeros((len(self.dish_keystrings),len(self.t_index),3)) # receiver posn wrt drone
-        for i in range(len(self.dish_keystrings)):
+        self.xyz_per_dish=np.zeros((self.n_dishes,len(self.t_index),3)) # drone posn wrt receiver
+        self.rpt_r_per_dish=np.zeros((self.n_dishes,len(self.t_index),3)) # drone posn wrt receiver
+        self.rpt_t_per_dish=np.zeros((self.n_dishes,len(self.t_index),3)) # receiver posn wrt drone
+        for i in range(self.n_dishes):
             ## Receiver RPT after TRANS and ROT: (from receiver N to Drone in Receiver Cartesian "RC" coords)
             drone_xyz_RC=self.coords_xyz_LC-self.dish_coords[i] # translate LC to receiver i position
             self.xyz_per_dish[i,:,:]=drone_xyz_RC
