@@ -157,13 +157,13 @@ class Beammap_forautoprocessing:
              self.d1_edges_grid) = get_coord_locs(coordsys,d0args,d1args,self.n_channels)
 
         ## now need frequency dependent offset terms in shape (freq, channel, concat) to mimic V
-        self.x_offsets=np.NAN*np.ones((self.n_freqs,self.n_channels,self.n_concats))
-        self.y_offsets=np.NAN*np.ones((self.n_freqs,self.n_channels,self.n_concats))
+        self.x_offsets=np.nan*np.ones((self.n_freqs,self.n_channels,self.n_concats))
+        self.y_offsets=np.nan*np.ones((self.n_freqs,self.n_channels,self.n_concats))
         
         ## create arrays for V mean, V std, and histo: shape is (gridx, gridy, freq, chans, concatlist)
-        self.V_LC_sum=np.NAN*np.ones((len(self.d0_centers[:,0]),len(self.d1_centers[:,0]),
+        self.V_LC_sum=np.nan*np.ones((len(self.d0_centers[:,0]),len(self.d1_centers[:,0]),
                                       self.n_freqs,self.n_channels,self.n_concats))
-        self.V_LC_count=np.NAN*np.ones((len(self.d0_centers[:,0]),len(self.d1_centers[:,0]),
+        self.V_LC_count=np.nan*np.ones((len(self.d0_centers[:,0]),len(self.d1_centers[:,0]),
                                         self.n_freqs,self.n_channels,self.n_concats))
 
         print("start of big ass loop is: {}".format(datetime.datetime.now()))
@@ -205,9 +205,9 @@ class Beammap_forautoprocessing:
         
         
         if operation=='coadd' or operation=='std': 
-            self.V_LC_operation=np.NAN*np.ones(self.V_LC_sum[:,:,:,:,0].shape)
-            self.V_LC_operation_err=np.NAN*np.ones(self.V_LC_sum[:,:,:,:,0].shape)
-            self.V_LC_operation_count=np.NAN*np.ones(self.V_LC_sum[:,:,:,:,0].shape)
+            self.V_LC_operation=np.nan*np.ones(self.V_LC_sum[:,:,:,:,0].shape)
+            self.V_LC_operation_err=np.nan*np.ones(self.V_LC_sum[:,:,:,:,0].shape)
+            self.V_LC_operation_count=np.nan*np.ones(self.V_LC_sum[:,:,:,:,0].shape)
             
             # average all bins together
             self.V_LC_operation_count = np.nansum(self.V_LC_count,axis=4)
@@ -215,7 +215,7 @@ class Beammap_forautoprocessing:
                         
         if operation=='std':
             # unfortunately, repeat the above.... assume you're only doing this with pickle files, normalized
-            self.V_LC_err=np.NAN*np.ones((len(self.d0_centers[:,0]),len(self.d1_centers[:,0]),
+            self.V_LC_err=np.nan*np.ones((len(self.d0_centers[:,0]),len(self.d1_centers[:,0]),
                                         self.n_freqs,self.n_channels,self.n_concats))
             
             for h,cstring in enumerate(concatlist):
@@ -399,16 +399,16 @@ class Beammap_polar:
              self.d1_edges_grid) = get_coord_locs(coordsys,d0args,d1args,self.n_channels)
 
         ## now need frequency dependent offset terms in shape (freq, channel, concat) to mimic V
-        self.x_offsets=np.NAN*np.ones((len(self.freq),self.n_channels,self.n_concats))
-        self.y_offsets=np.NAN*np.ones((len(self.freq),self.n_channels,self.n_concats))        
+        self.x_offsets=np.nan*np.ones((len(self.freq),self.n_channels,self.n_concats))
+        self.y_offsets=np.nan*np.ones((len(self.freq),self.n_channels,self.n_concats))        
         ## create arrays for V mean, V std, and histo: shape is (gridx, gridy, freq, chans, concatlist)
-        self.V_LC_mean=np.NAN*np.ones((len(self.d0_centers[:,0]),len(self.d1_centers[:,0]),len(self.freq),self.n_channels,self.n_concats))
-        self.V_LC_std=np.NAN*np.ones((len(self.d0_centers[:,0]),len(self.d1_centers[:,0]),len(self.freq),self.n_channels,self.n_concats))
-        self.histogram_LC=np.NAN*np.ones((len(self.d0_centers[:,0]),len(self.d1_centers[:,0]),len(self.freq),self.n_channels,self.n_concats))
+        self.V_LC_mean=np.nan*np.ones((len(self.d0_centers[:,0]),len(self.d1_centers[:,0]),len(self.freq),self.n_channels,self.n_concats))
+        self.V_LC_std=np.nan*np.ones((len(self.d0_centers[:,0]),len(self.d1_centers[:,0]),len(self.freq),self.n_channels,self.n_concats))
+        self.histogram_LC=np.nan*np.ones((len(self.d0_centers[:,0]),len(self.d1_centers[:,0]),len(self.freq),self.n_channels,self.n_concats))
         ## create arrays for V mean, V std, and histo: shape is (gridx, gridy, freq, chans, concatlist)
-        self.V_LC_sum=np.NAN*np.ones((len(self.d0_centers[:,0]),len(self.d1_centers[:,0]),
+        self.V_LC_sum=np.nan*np.ones((len(self.d0_centers[:,0]),len(self.d1_centers[:,0]),
                                       self.n_freqs,self.n_channels,self.n_concats))
-        self.V_LC_count=np.NAN*np.ones((len(self.d0_centers[:,0]),len(self.d1_centers[:,0]),
+        self.V_LC_count=np.nan*np.ones((len(self.d0_centers[:,0]),len(self.d1_centers[:,0]),
                                         self.n_freqs,self.n_channels,self.n_concats))
         
         print("start of big ass loop is: {}".format(datetime.datetime.now()))
@@ -449,9 +449,9 @@ class Beammap_polar:
         self.V_LC_sum[self.V_LC_sum == 0] = 'nan'
         
         if operation=='coadd' or operation=='std': 
-            self.V_LC_operation=np.NAN*np.ones(self.V_LC_sum[:,:,:,:,0].shape)
-            self.V_LC_operation_err=np.NAN*np.ones(self.V_LC_sum[:,:,:,:,0].shape)
-            self.V_LC_operation_count=np.NAN*np.ones(self.V_LC_sum[:,:,:,:,0].shape)
+            self.V_LC_operation=np.nan*np.ones(self.V_LC_sum[:,:,:,:,0].shape)
+            self.V_LC_operation_err=np.nan*np.ones(self.V_LC_sum[:,:,:,:,0].shape)
+            self.V_LC_operation_count=np.nan*np.ones(self.V_LC_sum[:,:,:,:,0].shape)
             
             # average all bins together
             self.V_LC_operation_count = np.nansum(self.V_LC_count,axis=4)
@@ -460,7 +460,7 @@ class Beammap_polar:
         
         if operation=='std':
             # unfortunately, repeat the above.... assume you're only doing this with pickle files, normalize
-            self.V_LC_err=np.NAN*np.ones(self.V_LC_sum.shape)           
+            self.V_LC_err=np.nan*np.ones(self.V_LC_sum.shape)           
  
             for h,cstring in enumerate(concatlist):
                 self.FLYNUM=cstring.split('FLY')[1].split('_')[0]
