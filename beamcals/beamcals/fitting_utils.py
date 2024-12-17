@@ -118,8 +118,8 @@ def Fit_Main_Beam(inputconcat,chans,freqs,theta_solve,coordbounds=[50.0,50.0,150
                 A_popt[i,j]=least_squares(Airy_2d_LC_opt,x0=pA,args=mb_input_data).x
                 A_PR[i,j]=pearsonr(mbV,Airy_2d_LC_func(A_popt[i,j,:],mbx,mby))[0]
             except ValueError:
-                A_popt[i,j,:]=np.NAN*np.zeros(5)
-                A_PR[i,j]=np.NAN
-                G_popt[i,j,:]=np.NAN*np.zeros(7)
-                G_PR[i,j]=np.NAN
+                A_popt[i,j,:]=np.nan*np.zeros(5)
+                A_PR[i,j]=np.nan
+                G_popt[i,j,:]=np.nan*np.zeros(7)
+                G_PR[i,j]=np.nan
     return A_popt,A_PR,G_popt,G_PR

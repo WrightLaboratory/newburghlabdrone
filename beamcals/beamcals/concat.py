@@ -175,13 +175,13 @@ class CONCAT:
         elif self.traceback==False:
             pass
         ## Create useful drone coordinate arrays which we must interp, NAN non valued elements:
-        self.drone_llh_interp=np.NAN*np.ones((self.t_arr_datetime.shape[0],3))
-        self.drone_xyz_LC_interp=np.NAN*np.ones((self.t_arr_datetime.shape[0],3))
-        self.drone_rpt_interp=np.NAN*np.ones((self.t_arr_datetime.shape[0],3))
-        self.drone_yaw_interp=np.NAN*np.ones(self.t_arr_datetime.shape[0])
-        self.drone_xyz_per_dish_interp=np.NAN*np.ones((DRONEDATCLASS.xyz_per_dish.shape[0],self.t_arr_datetime.shape[0],3))
-        self.drone_rpt_r_per_dish_interp=np.NAN*np.ones((DRONEDATCLASS.rpt_r_per_dish.shape[0],self.t_arr_datetime.shape[0],3))
-        self.drone_rpt_t_per_dish_interp=np.NAN*np.ones((DRONEDATCLASS.rpt_r_per_dish.shape[0],self.t_arr_datetime.shape[0],3))
+        self.drone_llh_interp=np.nan*np.ones((self.t_arr_datetime.shape[0],3))
+        self.drone_xyz_LC_interp=np.nan*np.ones((self.t_arr_datetime.shape[0],3))
+        self.drone_rpt_interp=np.nan*np.ones((self.t_arr_datetime.shape[0],3))
+        self.drone_yaw_interp=np.nan*np.ones(self.t_arr_datetime.shape[0])
+        self.drone_xyz_per_dish_interp=np.nan*np.ones((DRONEDATCLASS.xyz_per_dish.shape[0],self.t_arr_datetime.shape[0],3))
+        self.drone_rpt_r_per_dish_interp=np.nan*np.ones((DRONEDATCLASS.rpt_r_per_dish.shape[0],self.t_arr_datetime.shape[0],3))
+        self.drone_rpt_t_per_dish_interp=np.nan*np.ones((DRONEDATCLASS.rpt_r_per_dish.shape[0],self.t_arr_datetime.shape[0],3))
         ## Interp Drone variables:
         for i in [0,1,2]:
             self.drone_llh_interp[CORR_t_ind_lb:CORR_t_ind_ub,i]=np.interp(ds_CORR,ds_drone,DRONEDATCLASS.coords_llh[:,i])
@@ -238,7 +238,7 @@ class CONCAT:
                     try:
                         Pr_arr[i,j]=pearsonr(stepped_func(time_s[t_restrict]),shiftedswitch[t_restrict])[0]
                     except ValueError:
-                        Pr_arr[i,j]=np.NAN
+                        Pr_arr[i,j]=np.nan
                 if self.traceback==True:
                     ax1.plot(t_offset_dist,Pr_arr[i,:],'.')
                 elif self.traceback==False:
@@ -252,8 +252,8 @@ class CONCAT:
                     Pr_max_ind_per_channel[i]=maxPrind
                     Pr_max_t_0_per_channel[i]=t_offset_dist[maxPrind]
                 except IndexError:
-                    Pr_max_ind_per_channel[i]=np.NAN
-                    Pr_max_t_0_per_channel[i]=np.NAN            
+                    Pr_max_ind_per_channel[i]=np.nan
+                    Pr_max_t_0_per_channel[i]=np.nan            
             self.t_delta_pulse=np.nanmedian(Pr_max_t_0_per_channel)
             if self.traceback==True:
                 ax1.axvline(self.t_delta_pulse,label="selected t_offset")
@@ -393,8 +393,8 @@ class CONCAT:
                         GPRmax[i,j]=np.where(GPRarr[:,i,j]==np.nanmax(GPRarr[:,i,j]))[0][0]
                         GPRval[i,j]=GPRarr[int(GPRmax[i,j]),i,j]
                     except IndexError:
-                        GPRmax[i,j]=np.NAN
-                        GPRval[i,j]=np.NAN
+                        GPRmax[i,j]=np.nan
+                        GPRval[i,j]=np.nan
             copolchan=np.where(np.nanmean(GPRval,axis=1)==np.nanmax(np.nanmean(GPRval,axis=1)))[0][0]
             ## Redefine time axis for fine resolution:
             tfine0=t_coarse[int(np.nanmedian(GPRmax[copolchan,:]))]
@@ -430,8 +430,8 @@ class CONCAT:
                         GPRmax_fine[i,j]=np.where(GPRarr_fine[:,i,j]==np.nanmax(GPRarr_fine[:,i,j]))[0][0]
                         GPRval_fine[i,j]=GPRarr_fine[int(GPRmax_fine[i,j]),i,j]
                     except IndexError:
-                        GPRmax_fine[i,j]=np.NAN
-                        GPRval_fine[i,j]=np.NAN
+                        GPRmax_fine[i,j]=np.nan
+                        GPRval_fine[i,j]=np.nan
             ## Which channel has the best gaussianity, and what time offset does that channel suggest?
             copolchan_fine=np.where(np.nanmean(GPRval_fine,axis=1)==np.nanmax(np.nanmean(GPRval_fine,axis=1)))[0][0]
             self.t_delta_dji=t_fine[int(np.nanmedian(GPRmax_fine[copolchan_fine,:]))]
