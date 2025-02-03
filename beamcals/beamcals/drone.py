@@ -215,10 +215,10 @@ class Drone_Data:
 
         ## Define coordinate systems we will eventually want to use:
         print("  --> generating llh, geocentric cartesian, local cartesian, and local spherical coordinates.")
-        self.coords_llh=np.NAN*np.ones((self.t_index.shape[0],3))     ## Lat,Lon,hmsl from drone/RTK
-        self.coords_xyz_GC=np.NAN*np.ones((self.t_index.shape[0],3))  ## x,y,z in meters in geocentric cartesian
-        self.coords_xyz_LC=np.NAN*np.ones((self.t_index.shape[0],3))  ## x,y,z cartesian wrt a chosen origin (x=E,y=N,z=up)
-        self.coords_rpt=np.NAN*np.ones((self.t_index.shape[0],3))     ## r,theta,phi wrt a chosen origin
+        self.coords_llh=np.nan*np.ones((self.t_index.shape[0],3))     ## Lat,Lon,hmsl from drone/RTK
+        self.coords_xyz_GC=np.nan*np.ones((self.t_index.shape[0],3))  ## x,y,z in meters in geocentric cartesian
+        self.coords_xyz_LC=np.nan*np.ones((self.t_index.shape[0],3))  ## x,y,z cartesian wrt a chosen origin (x=E,y=N,z=up)
+        self.coords_rpt=np.nan*np.ones((self.t_index.shape[0],3))     ## r,theta,phi wrt a chosen origin
         ## Populate and calculate these coordinate systems:
         for i in self.t_index[np.where(np.isnan(self.latitude)==False)]:
             try:

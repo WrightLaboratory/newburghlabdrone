@@ -167,14 +167,14 @@ class Beammap:
                 self.d0_edges_grid[:,:,i]=thetaedgesgrid
                 self.d1_edges_grid[:,:,i]=phiedgesgrid    
         ## now need frequency dependent offset terms in shape (freq, channel, concat) to mimic V
-        self.x_offsets=np.NAN*np.ones((len(self.freq),self.n_channels,self.n_concats))
-        self.y_offsets=np.NAN*np.ones((len(self.freq),self.n_channels,self.n_concats))        
+        self.x_offsets=np.nan*np.ones((len(self.freq),self.n_channels,self.n_concats))
+        self.y_offsets=np.nan*np.ones((len(self.freq),self.n_channels,self.n_concats))        
         ## create arrays for V mean, V std, and histo: shape is (gridx, gridy, freq, chans, concatlist)
-        self.V_LC_mean=np.NAN*np.ones((len(self.d0_centers[:,0]),len(self.d1_centers[:,0]),len(self.freq),self.n_channels,self.n_concats))
-        self.V_LC_std=np.NAN*np.ones((len(self.d0_centers[:,0]),len(self.d1_centers[:,0]),len(self.freq),self.n_channels,self.n_concats))
-        self.histogram_LC=np.NAN*np.ones((len(self.d0_centers[:,0]),len(self.d1_centers[:,0]),len(self.freq),self.n_channels,self.n_concats))
+        self.V_LC_mean=np.nan*np.ones((len(self.d0_centers[:,0]),len(self.d1_centers[:,0]),len(self.freq),self.n_channels,self.n_concats))
+        self.V_LC_std=np.nan*np.ones((len(self.d0_centers[:,0]),len(self.d1_centers[:,0]),len(self.freq),self.n_channels,self.n_concats))
+        self.histogram_LC=np.nan*np.ones((len(self.d0_centers[:,0]),len(self.d1_centers[:,0]),len(self.freq),self.n_channels,self.n_concats))
         if include_cross_data==True:
-            self.V_LC_cross=np.NAN*np.ones((len(self.d0_centers[:,0]),len(self.d1_centers[:,0]),len(self.freq),len(self.crossmap),self.n_concats))
+            self.V_LC_cross=np.nan*np.ones((len(self.d0_centers[:,0]),len(self.d1_centers[:,0]),len(self.freq),len(self.crossmap),self.n_concats))
             self.V_LC_cross=self.V_LC_cross.astype(complex) 
         ## Initialize Figure Environment for traceback plot:
         if vplot==True:
@@ -230,12 +230,13 @@ class Beammap:
                     im1y0=axes0[1][0].scatter(ch1coords[:,0],ch1coords[:,1],c=ccc.V_bgsub[t_cut,f_index_cc,1],cmap=cm.gnuplot2,norm=LogNorm())    
                 else:
                     pass
-            elif normalization=='Gauss':
+            elif normalization=='Gauss' or normalization=='Gauss_woffset':
                 if len(gfitlist)==len(concatlist):
                     ## make sure the normalization is being appropriately applied to the correct file:
                     if concatlist[h].split('_')[0]==gfitlist[h].split('_')[0]:
                         with np.load(gfit_directory+gfitlist[h]) as gff:
-                            g_norm=gff['G_popt'][:,:,0]
+                            if normalization=='Gauss_woffset': g_norm = gff['G_popt'][:,:,0]+gff['G_popt'][:,:,5]
+                            else: g_norm=gff['G_popt'][:,:,0]
                             for i in range(self.n_channels):
                                 if self.copoldir in 'E':
                                     COPOLIND=np.arange(self.n_channels).reshape(int(self.n_channels/2),2)[int(i/2)][0]
@@ -265,7 +266,7 @@ class Beammap:
                     ## make sure the normalization is being appropriately applied to the correct file:
                     if concatlist[h].split('_')[0]==gfitlist[h].split('_')[0] and concatlist[h].split('_')[0]==ampcorrlist[h].split('_')[0]:
                         with np.load(gfit_directory+gfitlist[h]) as gff:
-                            g_norm=gff['G_popt'][:,:,0]
+                            g_norm=gff['G_popt'][:,:,0]+gff['G_popt'][:,:,5]
                             for i in range(self.n_channels):
                                 if self.copoldir in 'E':
                                     COPOLIND=np.arange(self.n_channels).reshape(int(self.n_channels/2),2)[int(i/2)][0]
@@ -302,7 +303,7 @@ class Beammap:
             if normalization=='none':
                 Vvals=ccc.V_bgsub[ccc.inds_on,self.fmin:self.fmax:self.fstep,:]
                 fccoords=tmpcoords[:,ccc.inds_on]
-            elif normalization=='Gauss':
+            elif normalization=='Gauss' or normalization=='Gauss_woffset':
                 Vvals=(np.repeat(np.swapaxes(g_norm[:,self.fmin:self.fmax:self.fstep],0,1)[np.newaxis,:,:],len(ccc.inds_on),axis=0)**-1)*ccc.V_bgsub[ccc.inds_on,self.fmin:self.fmax:self.fstep,:]           
             elif normalization=='Gauss_wcorr':    
                 Vvals_gcorr=(np.repeat(np.swapaxes(g_norm[:,self.fmin:self.fmax:self.fstep],0,1)[np.newaxis,:,:],len(ccc.inds_on),axis=0)**-1)*ccc.V_bgsub[ccc.inds_on,self.fmin:self.fmax:self.fstep,:]      
@@ -363,11 +364,11 @@ class Beammap:
                 tight_layout()                
         print("end of concat loop is: {}".format(datetime.datetime.now()))
         if operation=='coadd':
-            self.V_LC_operation=np.NAN*np.ones(self.V_LC_mean[:,:,:,:,0].shape)
+            self.V_LC_operation=np.nan*np.ones(self.V_LC_mean[:,:,:,:,0].shape)
             self.V_LC_operation=np.nanmean(self.V_LC_mean,axis=4)
         elif operation=='difference':
             if len(concatlist)==2:
-                self.V_LC_operation=np.NAN*np.ones(self.V_LC_mean[:,:,:,:,0].shape)
+                self.V_LC_operation=np.nan*np.ones(self.V_LC_mean[:,:,:,:,0].shape)
                 self.V_LC_operation=np.nansum(np.array([self.V_LC_mean[:,:,:,:,0],-1*self.V_LC_mean[:,:,:,:,1]]),axis=0)
             else:
                 print("--> V_LC_operation can only be instantiated if the length of concatlist is exactly 2")

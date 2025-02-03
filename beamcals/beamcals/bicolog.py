@@ -48,10 +48,10 @@ from scipy.interpolate import interpn
 
 
 ## Define directories that contain modules/files of interest:
-working_directory=u"/Users/wct9/python/"
-drone_mod_directory=u'/Users/wct9/python/dronehacks/'
-bico_beam_ECo_directory='/Users/wct9/python/Bicolog_Beam_EK_ECo/'
-bico_beam_HCo_directory='/Users/wct9/python/Bicolog_Beam_EK_HCo/'
+#working_directory=u"/Users/wct9/python/"
+#drone_mod_directory=u'/Users/wct9/python/dronehacks/'
+bico_beam_ECo_directory='/hirax/bicolog_data/Bicolog_Beam_EK_ECo/'#'/Users/wct9/python/Bicolog_Beam_EK_ECo/'
+bico_beam_HCo_directory='/hirax/bicolog_data/Bicolog_Beam_EK_HCo/'#'/Users/wct9/python/Bicolog_Beam_EK_HCo/'
 
 class Bicolog_Beam:
     def __init__(self,SParameter='S21'):

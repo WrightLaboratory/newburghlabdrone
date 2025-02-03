@@ -511,26 +511,32 @@ def cm_to_discrete(cmap, number):
 
 def get_slice(X,Y,Z,val, sliceOrientation='h'):
     # this gradually increases the tolerance until it finds something
-    tol = abs(X[1,0] - X[0,0])/1.5
-    N = len(X[:,0]) #figure out the importance of this 
     ok = True
+    
+    if sliceOrientation=='h': 
+        tol = abs(Y[0,1] - Y[0,0])/2.0
+    else:
+        tol = abs(X[1,0] - X[0,0])/2.0
+        
     while(ok):
-        if sliceOrientation=='h': #keeping the y value constant and changing the x value 
-            tol = abs(Y[0,1] - Y[0,0])/1.5
+        if sliceOrientation=='h': #keeping the y value constant and changing the x value  
             sliceIndex = np.where((Y[0,:] < (val + tol)) & (Y[0,:] > (val-tol)))[0]
-            n = np.count_nonzero(np.isfinite(Z)) #count number of 'good' data
-            if n > 10: ok = False
-            else: ok = True
-                #still need to do this one 
+            if len(sliceIndex>1): sliceIndex = sliceIndex[0]
+            n = np.count_nonzero(np.isfinite(Z[:,sliceIndex])) #count number of 'good' data 
+            if n > 10: 
+                ok = False
+            else: 
+                ok = True 
         if sliceOrientation=='v': #keeping the x value constant and changing the y value 
-            tol = abs(X[1,0] - X[0,0])/1.5
             sliceIndex = np.where((X[:,0] < (val+tol)) & (X[:,0] > (val-tol)))[0]
-            n = np.count_nonzero(np.isfinite(Z)) #count number of 'good' data
+            if len(sliceIndex>1): sliceIndex = sliceIndex[0]
+            n = np.count_nonzero(np.isfinite(Z[sliceIndex,:])) #count number of 'good' data
             if n > 10: ok = False
-            else: ok = True
+            else: 
+                ok = True
         tol+=1
         if tol > 30: ok = False
-    return sliceIndex[0]
+    return sliceIndex
 
 def get_polar_slice(theta,phi,val=0.0): # assume val in angle
     

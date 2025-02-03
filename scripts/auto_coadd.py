@@ -51,6 +51,10 @@ sz = 80
 
 
 def get_flightinfo(fly):
+    with open('/hirax/GBO_Analysis_Outputs/GBO_flights_forscripts.yaml', 'r') as fff:
+        documents = yaml.safe_load(fff)
+    flights = documents["flight_info"]["flights"]
+    
     for fi in range(0,len(documents["flight_info"]["flights"])):
         if fly == flights[fi]: f = fi
     
@@ -61,7 +65,6 @@ def get_flightinfo(fly):
         pols = E_pols
         cpols = N_pols
     return polarn[f], pols, cpols, attns[f], f
-
 
 with open('/hirax/GBO_Analysis_Outputs/GBO_flights_forscripts.yaml', 'r') as fff:
     documents = yaml.safe_load(fff)
@@ -77,7 +80,7 @@ pcklarr=np.sort(os.listdir(pckldir))
 gfitarr=np.sort(os.listdir(fitdir))
 amparr=np.sort(os.listdir(ampdir))
 
-Npolflights = ['618','619','625','646','647','533','536']
+Npolflights = ['618','619','625','646','647','533']
 Epolflights = ['620','648','649','535']
 
 delt_the = np.radians(6)
@@ -90,8 +93,8 @@ for find in good_freqs:
     concytest=[glob.glob(pckldir+'*'+fly+'*')[0] for fly in flights]    
 
     #beam=ba.Beammap_forautoprocessing(concatlist=concytest,
-    #             normalization='Gauss_wcorr',operation='std',mask=True,Xargs=[-1*sz,sz,2.5],
-    #             Yargs=[-1*sz,sz,2.5],Fargs=[find,find+1,1])
+    #             coordsys='cartesian',normalization='Gauss_wcorr',operation='std',mask=True,d0args=[-1*sz,sz,2.0],
+    #             d1args=[-1*sz,sz,2.0],Fargs=[find,find+1,1])
     beam=ba.Beammap_polar(concatlist=concytest,
                 coordsys='polar',
                 d0args=[-delt_the/2.0,(60*delt_the)-(delt_the/2.0),delt_the],
@@ -116,8 +119,8 @@ for find in good_freqs:
     concytest=[glob.glob(pckldir+'*'+fly+'*')[0] for fly in flights]    
 
     #beam=ba.Beammap_forautoprocessing(concatlist=concytest,
-    #             normalization='Gauss_wcorr',operation='std',mask=True,Xargs=[-1*sz,sz,2.5],
-    #             Yargs=[-1*sz,sz,2.5],Fargs=[find,find+1,1])
+    #             coordsys='cartesian',normalization='Gauss_wcorr',operation='std',mask=True,d0args=[-1*sz,sz,2.0],
+    #             d1args=[-1*sz,sz,2.0],Fargs=[find,find+1,1])
     beam=ba.Beammap_polar(concatlist=concytest,
                  coordsys='polar',
                  d0args=[-delt_the/2.0,(60*delt_the)-(delt_the/2.0),delt_the],
