@@ -82,9 +82,9 @@ class Drone_Data:
             self.pitch=np.array(drone_data[' pitch(degrees)'])
             self.roll=np.array(drone_data[' roll(degrees)'])
             self.yaw=np.array(drone_data[' compass_heading(degrees)'])
-            self.velocity=np.array(drone_data['speed(m/s)'])
-            self.hmsl=np.array(drone_data['altitude_above_seaLevel(meters)'])
-            self.altitude=np.array(drone_data['altitude_above_seaLevel(meters)'])[:]-self.origin[2]
+            self.velocity=np.array(drone_data['speed(mph)'])*0.44704 # convert to m/s
+            self.hmsl=np.array(drone_data['altitude_above_seaLevel(feet)'])*0.3048
+            self.altitude=(np.array(drone_data['altitude(feet)'])[:])*0.3048 -self.origin[2]
             self.t_arr_timestamp=np.array(pandas.to_datetime(drone_data['datetime(utc)'],utc=True),dtype='object')
             self.t_index=np.arange(len(self.t_arr_timestamp))
             t0=self.t_arr_timestamp[0]
