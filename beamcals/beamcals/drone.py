@@ -72,24 +72,6 @@ class Drone_Data:
             drone_data=pandas.read_csv(self.Drone_Directory+self.FLYTAG,skiprows=skip_rows,nrows=num_rows,low_memory=False)
         ## Assign Drone RTK Data to class variables:
         self.ignore_rtk=ignore_rtk
-        if "_processed" in self.FLYTAG:
-            print("Initializing drone data via processed_csv routine: {}".format(self.FLYTAG))
-            print("  --> Skipping rows {} to {} to eliminate NAN values".format(skip_rows[0],skip_rows[-1]))
-            ## Load data columns from processed files:
-            self.latitude=np.array(drone_data.Lat)
-            self.longitude=np.array(drone_data.Lon)
-            self.pitch=np.array(drone_data.pitch)
-            self.roll=np.array(drone_data.roll)
-            self.yaw=np.array(drone_data.yaw)
-            self.velocity=np.array(drone_data.vel)
-            self.hmsl=np.array(drone_data.hmsl)
-            self.altitude=np.array(drone_data.hmsl)[:]-self.origin[2]
-            try:
-                self.t_arr_timestamp=np.array(drone_data.timestamp)
-            except AttributeError:
-                self.t_arr_timestamp=np.array(drone_data.datetimestamp)
-            self.t_index=np.arange(len(self.t_arr_timestamp))
-            self.t_arr_datetime=np.array(drone_data.assign(UTC=pandas.to_datetime(drone_data.UTC)).UTC)
         ## Adding code for Airdata.csv methods for RTK 300
         if "Airdata" in self.FLYTAG:
             print("Initializing drone data via Airdata.csv routine: {}".format(self.FLYTAG))
