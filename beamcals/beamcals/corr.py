@@ -50,30 +50,14 @@ class Corr_Data:
                 vis=Cevals*Cevecs
             else:
                 vis=np.array(fd['vis']).transpose(2,0,1)[:,flb:fub,:]
-        ##distinguish bw processed and unprocessed files (EK)
-        if 'processed' in Data_Directory and 'new' not in Data_Directory: 
-            tm = fd['tm']
-            self.freq = fd['freq'][flb:fub]
-            self.prod = fd['prod'][:]   
-            self.n_channels=len(self.prod)
-        if 'processed_new' in Data_Directory: 
-            if use_ctime==False:
-                tm=np.array(fd['tm']['irigb_time']) # time axis
-            if use_ctime==True:
-                tm=np.array(fd['tm']['ctime']) # time axis
-            self.freq = fd['freq'][flb:fub]
-            self.prod = fd['prod'][:]   
-            self.n_channels=len(self.prod)
-            self.n_dishes=int(self.n_channels/2)
-        else: 
-            if use_ctime==False:
-                self.t0=1e-9*fd['index_map']['time']['irigb_time'][0]
-            if use_ctime==True:
-                self.t0=fd['index_map']['time']['ctime'][0]
-            self.freq=np.array([i[0] for i in fd['index_map']['freq'][flb:fub]]) # frequency axis
-            self.prod=fd['index_map']['prod'][:] # product axis
-            self.n_channels=min(len(site_class.chmap),int(fd['index_map']['prod'][:][-1][0]+1))
-            self.n_dishes=int(self.n_channels/2)
+        if use_ctime==False:
+            self.t0=1e-9*fd['index_map']['time']['irigb_time'][0]
+        if use_ctime==True:
+            self.t0=fd['index_map']['time']['ctime'][0]
+        self.freq=np.array([i[0] for i in fd['index_map']['freq'][flb:fub]]) # frequency axis
+        self.prod=fd['index_map']['prod'][:] # product axis
+        self.n_channels=min(len(site_class.chmap),int(fd['index_map']['prod'][:][-1][0]+1))
+        self.n_dishes=int(self.n_channels/2)
         self.chmap=np.array(site_class.chmap[:self.n_channels]).astype(int)
         self.automap=np.zeros(self.n_channels).astype(int)
         self.crossmap=crossmap
@@ -125,36 +109,19 @@ class Corr_Data:
                         vis=Cevals*Cevecs
                     else:
                         vis=np.array(fd_n['vis']).transpose(2,0,1)[:,flb:fub,:]
-                ##distinguish bw processed and unprocessed files
-                if 'processed' in Data_Directory and 'new' not in Data_Directory:
-                    tm=fd_n['tm'][:] # time axis
-                    freq=fd_n['freq'][flb:fub] # frequency axis
-                    prod=fd_n['prod'][:] # product axis
-                    for ii in range(len(prod)):
-                        vis[:,:,ii]/=(self.gain[:,ii]*self.gain[:,ii])[np.newaxis,:]
-                if 'processed_new' in Data_Directory: 
-                    if use_ctime==False:
-                        tm=np.array(fd_n['tm']['irigb_time']) # time axis
-                    if use_ctime==True:
-                        tm=np.array(fd_n['tm']['ctime']) # time axis
-                    freq=fd_n['freq'][flb:fub] # frequency axis
-                    prod=fd_n['prod'][:] # product axis
-                    for ii in range(len(prod)):
-                        vis[:,:,ii]/=(self.gain[:,ii]*self.gain[:,ii])[np.newaxis,:]
-                else:
-                    if use_ctime==False:
-                        tm=np.array(fd_n['index_map']['time']['irigb_time']) # time axis
-                        if 'GBO' in site_class.name:
-                            tm=(2.56e-6)*np.array(fd_n['index_map']['time']['fpga_count']) #construct time from fpga_counts
-                    if use_ctime==True:
-                        tm=np.array(fd_n['index_map']['time']['ctime']) # time axis
-                        if 'WLC' in site_class.name:
-                            tm=(2.56e-6)*np.array(fd_n['index_map']['time']['fpga_count']) #construct time from fpga_counts
-                    freq=np.array([i[0] for i in fd_n['index_map']['freq'][flb:fub]]) # frequency axis
-                    prod=fd_n['index_map']['prod'][:] # product axis
-                    ## gain calibrate visibilities:
-                    for ii,pp in enumerate(prod):
-                        vis[:,:,ii]/=(self.gain[:,pp[0]]*self.gain[:,pp[1]])[np.newaxis,:]
+                if use_ctime==False:
+                   tm=np.array(fd_n['index_map']['time']['irigb_time']) # time axis
+                   if 'GBO' in site_class.name:
+                        tm=(2.56e-6)*np.array(fd_n['index_map']['time']['fpga_count']) #construct time from fpga_counts
+                if use_ctime==True:
+                   tm=np.array(fd_n['index_map']['time']['ctime']) # time axis
+                   if 'WLC' in site_class.name:
+                       tm=(2.56e-6)*np.array(fd_n['index_map']['time']['fpga_count']) #construct time from fpga_counts
+                freq=np.array([i[0] for i in fd_n['index_map']['freq'][flb:fub]]) # frequency axis
+                prod=fd_n['index_map']['prod'][:] # product axis
+                ## gain calibrate visibilities:
+                for ii,pp in enumerate(prod):
+                    vis[:,:,ii]/=(self.gain[:,pp[0]]*self.gain[:,pp[1]])[np.newaxis,:]
                 ## Populate the automap array indices into V:
                 for j,k in enumerate(self.automap):
                     self.V[i,:,:,j]=vis[:,:,k].real
