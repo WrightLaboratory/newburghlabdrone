@@ -226,8 +226,8 @@ class CONCAT:
                 pass
             for i in range(self.n_channels):
                 ## If we use a mean subtracted data cut we can find where power exceeds zero to find signal
-                minsubdata=self.V[:,f_ind,i]-np.percentile(self.V[:,f_ind,i],minmaxpercents[0])
-                normminsubdata=minsubdata/np.percentile(minsubdata,minmaxpercents[1])
+                minsubdata=self.V[:,f_ind,i]-np.nanpercentile(self.V[:,f_ind,i],minmaxpercents[0])
+                normminsubdata=minsubdata/np.nanpercentile(minsubdata,minmaxpercents[1])
                 clipnormminsubdata=normminsubdata.clip(0,1)
                 stepped_func=interp1d(t_full,clipnormminsubdata,kind='previous',fill_value='extrapolate')
                 sniparr=np.where(time_s[np.where(time_s<=t_full[t_bounds[1]])[0]]>=t_full[t_bounds[0]])[0]
